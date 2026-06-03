@@ -1,0 +1,15 @@
+# Зависимости
+node_modules/
+
+# Файлы окружения (важно!)
+.env
+.env.local
+
+# Логи и системные файлы
+*.log
+.DS_Store
+Thumbs.db
+
+# Папки сборки
+dist/
+build/
