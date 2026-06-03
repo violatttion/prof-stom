@@ -16,7 +16,7 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     } else if (token) {
       // Fetch current user
-      api.get('/auth/me')
+      api.get('/api/auth/me')
         .then(res => {
           setUser(res.data);
           localStorage.setItem('user', JSON.stringify(res.data));
@@ -32,7 +32,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    const res = await api.post('/auth/login', { email, password });
+    const res = await api.post('/api/auth/login', { email, password });
     localStorage.setItem('token', res.data.token);
     localStorage.setItem('user', JSON.stringify(res.data.user));
     setUser(res.data.user);
