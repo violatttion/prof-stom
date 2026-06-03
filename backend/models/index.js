@@ -1,7 +1,4 @@
 const { Sequelize, DataTypes } = require('sequelize');
-const dotenv = require('dotenv');
-
-dotenv.config();
 
 // Проверяем наличие DATABASE_URL
 if (!process.env.DATABASE_URL) {
@@ -9,13 +6,24 @@ if (!process.env.DATABASE_URL) {
   process.exit(1);
 }
 
-// Подключение к БД
+console.log("=== DB DIAGNOSTIC ===");
+console.log("DATABASE_URL exists?", !!process.env.DATABASE_URL);
+if (process.env.DATABASE_URL) {
+    console.log("URL starts with:", process.env.DATABASE_URL.substring(0, 50));
+} else {
+    console.error("❌ DATABASE_URL is EMPTY!");
+    process.exit(1);
+}
+console.log("=====================");
+
+// Инициализируем подключение, читая переменную из окружения
 const sequelize = new Sequelize(process.env.DATABASE_URL, {
   dialect: 'postgres',
-  logging: false,
+  protocol: 'postgres',
   dialectOptions: {
     ssl: {
       require: true,
+      // Railway использует самоподписанный сертификат, поэтому rejectUnauthorized отключаем
       rejectUnauthorized: false
     }
   }
