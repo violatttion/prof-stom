@@ -17,7 +17,7 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await api.post('/auth/register', formData);
+      await api.post('/api/auth/register', formData);
       navigate('/login');
     } catch (err) {
       setError(err.response?.data?.error || 'Ошибка регистрации');
