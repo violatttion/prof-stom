@@ -3,21 +3,23 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-const { Sequelize } = require('sequelize');
+// Проверяем наличие DATABASE_URL
+if (!process.env.DATABASE_URL) {
+  console.error('❌ DATABASE_URL not found in environment variables');
+  process.exit(1);
+}
 
-// Берем URL базы данных из переменных окружения Railway
+// Подключение к БД
 const sequelize = new Sequelize(process.env.DATABASE_URL, {
   dialect: 'postgres',
   logging: false,
   dialectOptions: {
     ssl: {
       require: true,
-      rejectUnauthorized: false  // Обязательно для Railway
+      rejectUnauthorized: false
     }
   }
 });
-
-module.exports = sequelize;
 
 const db = {};
 
