@@ -14,7 +14,6 @@ class AppointmentController {
       if (status) where.status = status;
       if (patientId) where.patient_id = patientId;
 
-      // Role-based filtering
       if (req.user.role === 'doctor') {
         const doctor = await Doctor.findOne({ where: { user_id: req.user.id } });
         if (doctor) where.doctor_id = doctor.id;
@@ -42,9 +41,19 @@ class AppointmentController {
 
   async create(req, res) {
     try {
-      const { patient_id, doctor_id, appointment_date, appointment_time, service_ids = [], notes } = req.body;
+      let { patient_id, doctor_id, appointment_date, appointment_time, service_ids = [], notes } = req.body;
 
-      // Check for conflicts
+      // Если пациент записывается сам — берём его patient_id автоматически
+      if (req.user.role === 'patient' && !patient_id) {
+        const patient = await Patient.findOne({ where: { user_id: req.user.id } });
+        if (patient) patient_id = patient.id;
+      }
+
+      if (!patient_id) {
+        return res.status(400).json({ error: 'Не удалось определить пациента' });
+      }
+
+      // Проверка конфликтов
       const existing = await Appointment.findOne({
         where: {
           doctor_id,
@@ -69,13 +78,11 @@ class AppointmentController {
         created_by: req.user.id
       });
 
-      // Add services if provided
       if (service_ids && service_ids.length > 0) {
         const services = await Service.findAll({ where: { id: service_ids } });
         await appointment.setServices(services);
       }
 
-      // Notify via WebSocket
       const io = req.app.get('io');
       if (io) {
         io.to(`user_${patient_id}`).emit('appointment_created', appointment);
