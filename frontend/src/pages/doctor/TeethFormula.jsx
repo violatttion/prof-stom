@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { 
-  Typography, Paper, Grid, Button, Modal, Box, Select, MenuItem, TextField 
+  Typography, Paper, Button, Modal, Box, Select, MenuItem, TextField, Alert 
 } from '@mui/material';
 import api from '../../api';
 
@@ -24,6 +24,7 @@ const TeethFormula = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [status, setStatus] = useState('healthy');
   const [comment, setComment] = useState('');
+  const [error, setError] = useState('');
 
   useEffect(() => {
     fetchTeeth();
@@ -35,10 +36,14 @@ const TeethFormula = () => {
       const map = {};
       res.data.forEach(t => { map[t.tooth_number] = t; });
       setTeeth(map);
-    } catch (e) { console.error(e); }
+      setError('');
+    } catch (e) {
+      setError('Приём не найден или не существует. Создайте запись сначала.');
+    }
   };
 
   const handleToothClick = (num) => {
+    if (error) return;
     const existing = teeth[num] || { status: 'healthy', comment: '' };
     setSelectedTooth(num);
     setStatus(existing.status);
@@ -56,44 +61,55 @@ const TeethFormula = () => {
       setModalOpen(false);
       fetchTeeth();
     } catch (e) {
-      alert('Ошибка сохранения');
+      alert('Ошибка сохранения: ' + (e.response?.data?.error || e.message));
     }
   };
 
   return (
     <Paper sx={{ p: 3 }}>
-      <Typography variant="h5" gutterBottom>Интерактивная зубная формула (Приём #{appointmentId})</Typography>
+      <Typography variant="h5" gutterBottom>
+        Интерактивная зубная формула (Приём #{appointmentId})
+      </Typography>
+
+      {error && (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         Нажмите на зуб, чтобы изменить его состояние
       </Typography>
 
-      <svg viewBox="0 0 900 420" style={{ width: '100%', maxWidth: 900 }}>
-        {/* Upper jaw */}
-        {toothNumbers.slice(0, 16).map((num, i) => {
-          const x = 80 + (i % 8) * 90;
-          const y = i < 8 ? 120 : 200;
-          const color = statusColors[teeth[num]?.status] || statusColors.healthy;
-          return (
-            <g key={num} onClick={() => handleToothClick(num)} style={{ cursor: 'pointer' }}>
-              <circle cx={x} cy={y} r="28" fill={color} stroke="#333" strokeWidth="2" />
-              <text x={x} y={y + 5} textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">{num}</text>
-            </g>
-          );
-        })}
+      {!error && (
+        <svg viewBox="0 0 900 420" style={{ width: '100%', maxWidth: 900 }}>
+          {/* Верхняя челюсть */}
+          {toothNumbers.slice(0, 16).map((num, i) => {
+            const x = 80 + (i % 8) * 90;
+            const y = i < 8 ? 120 : 200;
+            const color = statusColors[teeth[num]?.status] || statusColors.healthy;
+            return (
+              <g key={num} onClick={() => handleToothClick(num)} style={{ cursor: 'pointer' }}>
+                <circle cx={x} cy={y} r="28" fill={color} stroke="#333" strokeWidth="2" />
+                <text x={x} y={y + 5} textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">{num}</text>
+              </g>
+            );
+          })}
 
-        {/* Lower jaw */}
-        {toothNumbers.slice(16).map((num, i) => {
-          const x = 80 + (i % 8) * 90;
-          const y = i < 8 ? 320 : 380;
-          const color = statusColors[teeth[num]?.status] || statusColors.healthy;
-          return (
-            <g key={num} onClick={() => handleToothClick(num)} style={{ cursor: 'pointer' }}>
-              <circle cx={x} cy={y} r="28" fill={color} stroke="#333" strokeWidth="2" />
-              <text x={x} y={y + 5} textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">{num}</text>
-            </g>
-          );
-        })}
-      </svg>
+          {/* Нижняя челюсть */}
+          {toothNumbers.slice(16).map((num, i) => {
+            const x = 80 + (i % 8) * 90;
+            const y = i < 8 ? 320 : 380;
+            const color = statusColors[teeth[num]?.status] || statusColors.healthy;
+            return (
+              <g key={num} onClick={() => handleToothClick(num)} style={{ cursor: 'pointer' }}>
+                <circle cx={x} cy={y} r="28" fill={color} stroke="#333" strokeWidth="2" />
+                <text x={x} y={y + 5} textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">{num}</text>
+              </g>
+            );
+          })}
+        </svg>
+      )}
 
       <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
         <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 400, bgcolor: 'background.paper', p: 4, borderRadius: 2 }}>

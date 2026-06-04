@@ -9,17 +9,27 @@ const steps = ['Выбор врача', 'Выбор услуги', 'Дата и 
 
 const BookAppointment = () => {
   const [activeStep, setActiveStep] = useState(0);
-  const [formData, setFormData] = useState({ doctor_id: '', service_id: '', date: '', time: '' });
+  const [formData, setFormData] = useState({ 
+    doctor_id: '', 
+    service_id: '', 
+    appointment_date: '', 
+    appointment_time: '' 
+  });
 
   const handleNext = () => setActiveStep((prev) => prev + 1);
   const handleBack = () => setActiveStep((prev) => prev - 1);
 
   const handleSubmit = async () => {
     try {
-      await api.post('/appointments', formData);
+      await api.post('/appointments', {
+        doctor_id: formData.doctor_id,
+        appointment_date: formData.appointment_date,
+        appointment_time: formData.appointment_time,
+        service_ids: formData.service_id ? [formData.service_id] : []
+      });
       alert('Запись успешно создана!');
       setActiveStep(0);
-      setFormData({ doctor_id: '', service_id: '', date: '', time: '' });
+      setFormData({ doctor_id: '', service_id: '', appointment_date: '', appointment_time: '' });
     } catch (e) {
       alert('Ошибка: ' + (e.response?.data?.error || e.message));
     }
@@ -55,8 +65,18 @@ const BookAppointment = () => {
 
       {activeStep === 2 && (
         <Box>
-          <input type="date" value={formData.date} onChange={(e) => setFormData({...formData, date: e.target.value})} style={{width: '100%', padding: 12, marginBottom: 16}} />
-          <input type="time" value={formData.time} onChange={(e) => setFormData({...formData, time: e.target.value})} style={{width: '100%', padding: 12}} />
+          <input 
+            type="date" 
+            value={formData.appointment_date} 
+            onChange={(e) => setFormData({...formData, appointment_date: e.target.value})} 
+            style={{width: '100%', padding: 12, marginBottom: 16}} 
+          />
+          <input 
+            type="time" 
+            value={formData.appointment_time} 
+            onChange={(e) => setFormData({...formData, appointment_time: e.target.value})} 
+            style={{width: '100%', padding: 12}} 
+          />
         </Box>
       )}
 
@@ -64,7 +84,7 @@ const BookAppointment = () => {
         <Box>
           <Typography>Врач ID: {formData.doctor_id}</Typography>
           <Typography>Услуга ID: {formData.service_id}</Typography>
-          <Typography>Дата: {formData.date} {formData.time}</Typography>
+          <Typography>Дата: {formData.appointment_date} {formData.appointment_time}</Typography>
         </Box>
       )}
 
