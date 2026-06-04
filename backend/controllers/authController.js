@@ -62,12 +62,15 @@ class AuthController {
 
       let isPasswordValid = false;
 
-      // Проверяем, захеширован ли пароль (начинается с $2b$)
-      if (user.password.startsWith('$2b$')) {
-        isPasswordValid = await bcrypt.compare(password, user.password);
-      } else {
-        // Если пароль в открытом виде (для тестовых аккаунтов)
-        isPasswordValid = password === user.password;
+      // Защита от null/undefined
+      if (user.password && typeof user.password === 'string') {
+        if (user.password.startsWith('$2b$')) {
+          // Пароль захеширован
+          isPasswordValid = await bcrypt.compare(password, user.password);
+        } else {
+          // Пароль в открытом виде (тестовые аккаунты)
+          isPasswordValid = password === user.password;
+        }
       }
 
       if (!isPasswordValid) {
@@ -95,7 +98,7 @@ class AuthController {
         }
       });
     } catch (error) {
-      console.error(error);
+      console.error('Login error:', error);
       res.status(500).json({ error: 'Ошибка при входе' });
     }
   }
