@@ -9,7 +9,7 @@ const api = axios.create({
   }
 });
 
-// Add token to every request
+// Добавляем токен к каждому запросу
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
@@ -18,14 +18,19 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Handle 401 errors
+// Обработка ошибок 401 (улучшенная версия)
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+      // Убираем принудительную перезагрузку при ошибке входа
+      // (чтобы ошибка оставалась видимой)
+      console.warn('401 Unauthorized received');
+      
+      // Можно раскомментировать ниже, если хочешь автоматический logout только при просроченном токене
+      // localStorage.removeItem('token');
+      // localStorage.removeItem('user');
+      // window.location.href = '/login';
     }
     return Promise.reject(error);
   }
