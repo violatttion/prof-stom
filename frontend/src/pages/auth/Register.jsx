@@ -5,7 +5,11 @@ import api from '../../api';
 
 const Register = () => {
   const [formData, setFormData] = useState({
-    email: '', password: '', full_name: '', phone: '', role: 'patient'
+    email: '', 
+    password: '', 
+    fullName: '',        // ← исправлено (было full_name)
+    phone: '', 
+    role: 'patient'
   });
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -17,7 +21,7 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await api.post('/api/auth/register', formData);
+      await api.post('/auth/register', formData);   // ← исправлено (убрал /api)
       navigate('/login');
     } catch (err) {
       setError(err.response?.data?.error || 'Ошибка регистрации');
@@ -32,12 +36,47 @@ const Register = () => {
         {error && <Alert severity="error">{error}</Alert>}
 
         <Box component="form" onSubmit={handleSubmit}>
-          <TextField name="full_name" label="ФИО" fullWidth margin="normal" required onChange={handleChange} />
-          <TextField name="email" label="Email" type="email" fullWidth margin="normal" required onChange={handleChange} />
-          <TextField name="phone" label="Телефон" fullWidth margin="normal" onChange={handleChange} />
-          <TextField name="password" label="Пароль" type="password" fullWidth margin="normal" required onChange={handleChange} />
           <TextField 
-            select name="role" label="Роль" fullWidth margin="normal" value={formData.role} onChange={handleChange}
+            name="fullName" 
+            label="ФИО" 
+            fullWidth 
+            margin="normal" 
+            required 
+            onChange={handleChange} 
+          />
+          <TextField 
+            name="email" 
+            label="Email" 
+            type="email" 
+            fullWidth 
+            margin="normal" 
+            required 
+            onChange={handleChange} 
+          />
+          <TextField 
+            name="phone" 
+            label="Телефон" 
+            fullWidth 
+            margin="normal" 
+            onChange={handleChange} 
+          />
+          <TextField 
+            name="password" 
+            label="Пароль" 
+            type="password" 
+            fullWidth 
+            margin="normal" 
+            required 
+            onChange={handleChange} 
+          />
+          <TextField 
+            select 
+            name="role" 
+            label="Роль" 
+            fullWidth 
+            margin="normal" 
+            value={formData.role} 
+            onChange={handleChange}
           >
             <MenuItem value="patient">Пациент</MenuItem>
             <MenuItem value="doctor">Врач</MenuItem>
