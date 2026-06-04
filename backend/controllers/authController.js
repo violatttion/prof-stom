@@ -60,7 +60,16 @@ class AuthController {
         return res.status(401).json({ error: 'Неверный email или пароль' });
       }
 
-      const isPasswordValid = await bcrypt.compare(password, user.password);
+      let isPasswordValid = false;
+
+      // Проверяем, захеширован ли пароль (начинается с $2b$)
+      if (user.password.startsWith('$2b$')) {
+        isPasswordValid = await bcrypt.compare(password, user.password);
+      } else {
+        // Если пароль в открытом виде (для тестовых аккаунтов)
+        isPasswordValid = password === user.password;
+      }
+
       if (!isPasswordValid) {
         return res.status(401).json({ error: 'Неверный email или пароль' });
       }

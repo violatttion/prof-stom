@@ -1,31 +1,21 @@
 const { Sequelize, DataTypes } = require('sequelize');
 
-// Проверяем наличие DATABASE_URL
+// Проверка наличия DATABASE_URL
 if (!process.env.DATABASE_URL) {
-  console.error('❌ DATABASE_URL not found in environment variables');
+  console.error('❌ DATABASE_URL не найден в переменных окружения');
   process.exit(1);
 }
 
-console.log("=== DB DIAGNOSTIC ===");
-console.log("DATABASE_URL exists?", !!process.env.DATABASE_URL);
-if (process.env.DATABASE_URL) {
-    console.log("URL starts with:", process.env.DATABASE_URL.substring(0, 50));
-} else {
-    console.error("❌ DATABASE_URL is EMPTY!");
-    process.exit(1);
-}
-console.log("=====================");
+console.log("=== DATABASE CONNECTION ===");
+console.log("Используется внутренняя БД Railway");
+console.log("DATABASE_URL существует:", !!process.env.DATABASE_URL);
 
-// Инициализируем подключение, читая переменную из окружения
+// Подключение к базе (оптимизировано под внутреннее подключение Railway)
 const sequelize = new Sequelize(process.env.DATABASE_URL, {
   dialect: 'postgres',
-  protocol: 'postgres',
+  logging: false,                    // Поставь true, если хочешь видеть SQL-запросы в логах
   dialectOptions: {
-    ssl: {
-      require: true,
-      // Railway использует самоподписанный сертификат, поэтому rejectUnauthorized отключаем
-      rejectUnauthorized: false
-    }
+    ssl: false                       // ← Для внутреннего подключения Railway SSL не нужен
   }
 });
 
@@ -34,7 +24,7 @@ const db = {};
 db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
-// Models
+// Модели
 db.User = require('./User')(sequelize, DataTypes);
 db.Patient = require('./Patient')(sequelize, DataTypes);
 db.Doctor = require('./Doctor')(sequelize, DataTypes);
@@ -45,7 +35,7 @@ db.TeethFormula = require('./TeethFormula')(sequelize, DataTypes);
 db.Notification = require('./Notification')(sequelize, DataTypes);
 db.Document = require('./Document')(sequelize, DataTypes);
 
-// Associations
+// Связи (Associations)
 db.User.hasOne(db.Patient, { foreignKey: 'user_id' });
 db.Patient.belongsTo(db.User, { foreignKey: 'user_id' });
 
@@ -58,13 +48,13 @@ db.Appointment.belongsTo(db.Doctor, { foreignKey: 'doctor_id' });
 db.Patient.hasMany(db.Appointment, { foreignKey: 'patient_id' });
 db.Appointment.belongsTo(db.Patient, { foreignKey: 'patient_id' });
 
-db.Appointment.belongsToMany(db.Service, { 
-  through: db.AppointmentService, 
-  foreignKey: 'appointment_id' 
+db.Appointment.belongsToMany(db.Service, {
+  through: db.AppointmentService,
+  foreignKey: 'appointment_id'
 });
-db.Service.belongsToMany(db.Appointment, { 
-  through: db.AppointmentService, 
-  foreignKey: 'service_id' 
+db.Service.belongsToMany(db.Appointment, {
+  through: db.AppointmentService,
+  foreignKey: 'service_id'
 });
 
 db.Appointment.hasMany(db.TeethFormula, { foreignKey: 'appointment_id' });
