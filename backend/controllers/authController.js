@@ -5,7 +5,7 @@ const { User, Patient, Doctor } = require('../models');
 class AuthController {
   async register(req, res) {
     try {
-      const { email, password, full_name, phone, role = 'patient', date_of_birth, specialization } = req.body;
+      const { email, password, fullName, phone, role = 'patient', date_of_birth, specialization } = req.body;
 
       const existingUser = await User.findOne({ where: { email } });
       if (existingUser) {
@@ -17,7 +17,7 @@ class AuthController {
       const user = await User.create({
         email,
         password: hashedPassword,
-        full_name,
+        full_name: fullName,     // ← исправлено (было full_name)
         phone,
         role
       });
@@ -62,13 +62,10 @@ class AuthController {
 
       let isPasswordValid = false;
 
-      // Защита от null/undefined
       if (user.password && typeof user.password === 'string') {
         if (user.password.startsWith('$2b$')) {
-          // Пароль захеширован
           isPasswordValid = await bcrypt.compare(password, user.password);
         } else {
-          // Пароль в открытом виде (тестовые аккаунты)
           isPasswordValid = password === user.password;
         }
       }
