@@ -34,15 +34,16 @@ const Login = () => {
     <Box
       sx={{
         minHeight: '100vh',
+        width: '100%',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'linear-gradient(135deg, #0d47a1 0%, #1565c0 50%, #1976d2 100%)',
+        background: 'linear-gradient(135deg, #e3f2fd 0%, #f5f9ff 50%, #e8f4fd 100%)',
         position: 'relative',
         overflow: 'hidden',
       }}
     >
-      {/* Анимированный фон с полосками */}
+      {/* Прерывистые медленно движущиеся линии */}
       <Box
         sx={{
           position: 'absolute',
@@ -50,32 +51,32 @@ const Login = () => {
           left: 0,
           right: 0,
           bottom: 0,
-          background: `
+          backgroundImage: `
             repeating-linear-gradient(
               135deg,
-              rgba(255,255,255,0.06) 0px,
-              rgba(255,255,255,0.06) 2px,
-              transparent 2px,
-              transparent 12px
+              rgba(21, 101, 192, 0.08) 0px,
+              rgba(21, 101, 192, 0.08) 3px,
+              transparent 3px,
+              transparent 28px
             )
           `,
-          animation: 'moveStripes 25s linear infinite',
-          '@keyframes moveStripes': {
+          animation: 'moveDashedLines 45s linear infinite',
+          '@keyframes moveDashedLines': {
             '0%': { backgroundPosition: '0 0' },
-            '100%': { backgroundPosition: '200px 200px' },
+            '100%': { backgroundPosition: '120px 120px' },
           },
         }}
       />
 
       <Container maxWidth="xs" sx={{ position: 'relative', zIndex: 1 }}>
         <Paper 
-          elevation={12} 
+          elevation={8} 
           sx={{ 
             p: 5, 
-            borderRadius: 4,
-            background: 'rgba(255,255,255,0.95)',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(21, 101, 192, 0.2)'
+            borderRadius: 5,
+            background: 'white',
+            boxShadow: '0 10px 40px rgba(21, 101, 192, 0.15)',
+            border: '1px solid #bbdefb'
           }}
         >
           <Typography 
@@ -85,7 +86,7 @@ const Login = () => {
             sx={{ 
               color: '#0d47a1', 
               fontWeight: 700,
-              letterSpacing: '-1.5px',
+              letterSpacing: '-1px',
               mb: 1
             }}
           >
@@ -132,18 +133,19 @@ const Login = () => {
               variant="contained"
               size="large"
               sx={{ 
-                py: 1.6, 
+                py: 1.7, 
                 fontSize: '1.05rem',
                 bgcolor: '#1565c0',
                 '&:hover': { bgcolor: '#0d47a1' },
-                mb: 2
+                mb: 2.5,
+                borderRadius: 2
               }}
               disabled={loading}
             >
-              {loading ? 'Вход...' : 'Войти в систему'}
+              {loading ? 'Вход...' : 'ВОЙТИ В СИСТЕМУ'}
             </Button>
 
-            <Typography align="center" sx={{ mt: 2 }}>
+            <Typography align="center" sx={{ color: '#555' }}>
               Нет аккаунта?{' '}
               <Link 
                 to="/register" 
