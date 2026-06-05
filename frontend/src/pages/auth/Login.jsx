@@ -36,12 +36,12 @@ const Login = () => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'linear-gradient(155deg, #f4f9ff 0%, #eaf4fd 35%, #f0f7ff 70%, #e8f4fd 100%)',
+        background: 'linear-gradient(150deg, #f0f7ff 0%, #eaf4fd 40%, #f4f9ff 100%)',
         position: 'relative',
         overflow: 'hidden',
       }}
     >
-      {/* Очень мягкие, редкие, медленно движущиеся лучи */}
+      {/* Мягкие лучи на фоне */}
       <Box
         sx={{
           position: 'absolute',
@@ -50,15 +50,15 @@ const Login = () => {
           right: 0,
           bottom: 0,
           backgroundImage: `
-            linear-gradient(130deg, rgba(21,101,192,0.07) 0%, transparent 40%),
-            linear-gradient(145deg, rgba(25,118,210,0.05) 20%, transparent 55%),
-            linear-gradient(120deg, rgba(13,71,161,0.06) 35%, transparent 70%)
+            linear-gradient(125deg, rgba(21, 101, 192, 0.09) 0%, transparent 38%),
+            linear-gradient(140deg, rgba(25, 118, 210, 0.07) 18%, transparent 52%),
+            linear-gradient(115deg, rgba(13, 71, 161, 0.08) 32%, transparent 68%)
           `,
-          backgroundSize: '220% 220%',
-          animation: 'softRays 65s ease-in-out infinite',
-          '@keyframes softRays': {
+          backgroundSize: '200% 200%',
+          animation: 'softRaysMove 52s ease-in-out infinite',
+          '@keyframes softRaysMove': {
             '0%': { backgroundPosition: '0% 0%' },
-            '50%': { backgroundPosition: '28% 32%' },
+            '50%': { backgroundPosition: '30% 35%' },
             '100%': { backgroundPosition: '0% 0%' },
           },
         }}
@@ -66,31 +66,20 @@ const Login = () => {
 
       <Container maxWidth="xs" sx={{ position: 'relative', zIndex: 2 }}>
         <Paper 
-          elevation={10} 
+          elevation={12} 
           sx={{ 
             p: 5, 
             borderRadius: 5,
             background: 'white',
-            boxShadow: '0 20px 60px rgba(13, 71, 161, 0.18)',
+            boxShadow: '0 20px 60px rgba(13, 71, 161, 0.2)',
             border: '1px solid #bbdefb'
           }}
         >
-          <Typography 
-            variant="h3" 
-            align="center" 
-            gutterBottom 
-            sx={{ color: '#0d47a1', fontWeight: 700, letterSpacing: '-1px' }}
-          >
+          <Typography variant="h3" align="center" gutterBottom sx={{ color: '#0d47a1', fontWeight: 700 }}>
             ПРОФ СТОМ
           </Typography>
           
-          <Typography 
-            variant="subtitle1" 
-            align="center" 
-            color="text.secondary" 
-            gutterBottom 
-            sx={{ mb: 4 }}
-          >
+          <Typography variant="subtitle1" align="center" color="text.secondary" gutterBottom sx={{ mb: 4 }}>
             Информационная система<br />стоматологической клиники
           </Typography>
 
