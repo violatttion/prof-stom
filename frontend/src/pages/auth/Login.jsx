@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { 
-  Container, Paper, TextField, Button, Typography, Box, Alert 
-} from '@mui/material';
+import { Container, Paper, TextField, Button, Typography, Box, Alert } from '@mui/material';
 import { useAuth } from '../../context/AuthContext';
+import AnimatedRaysBackground from '../../components/AnimatedRaysBackground';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -38,111 +37,44 @@ const Login = () => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'linear-gradient(160deg, #f0f7ff 0%, #e8f4fd 40%, #f5f9ff 100%)',
+        background: 'linear-gradient(160deg, #f0f7ff 0%, #e8f4fd 45%, #f5f9ff 100%)',
         position: 'relative',
         overflow: 'hidden',
       }}
     >
-      {/* Фон с толстыми мягкими лучами */}
-      <Box
-        sx={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: `
-            linear-gradient(135deg, rgba(21,101,192,0.08) 0%, transparent 35%),
-            linear-gradient(125deg, rgba(25,118,210,0.06) 15%, transparent 50%),
-            linear-gradient(145deg, rgba(13,71,161,0.07) 25%, transparent 65%)
-          `,
-          backgroundSize: '180% 180%',
-          animation: 'moveRays 48s ease-in-out infinite',
-          '@keyframes moveRays': {
-            '0%': { backgroundPosition: '0% 0%' },
-            '50%': { backgroundPosition: '35% 45%' },
-            '100%': { backgroundPosition: '0% 0%' },
-          },
-        }}
-      />
+      <AnimatedRaysBackground />
 
       <Container maxWidth="xs" sx={{ position: 'relative', zIndex: 2 }}>
         <Paper 
-          elevation={12} 
+          elevation={14} 
           sx={{ 
             p: 5, 
             borderRadius: 5,
             background: 'white',
-            boxShadow: '0 20px 60px rgba(13, 71, 161, 0.2)',
+            boxShadow: '0 25px 70px rgba(13, 71, 161, 0.22)',
             border: '1px solid #bbdefb'
           }}
         >
-          <Typography 
-            variant="h3" 
-            align="center" 
-            gutterBottom 
-            sx={{ color: '#0d47a1', fontWeight: 700, letterSpacing: '-1px' }}
-          >
+          <Typography variant="h3" align="center" gutterBottom sx={{ color: '#0d47a1', fontWeight: 700 }}>
             ПРОФ СТОМ
           </Typography>
           
-          <Typography 
-            variant="subtitle1" 
-            align="center" 
-            color="text.secondary" 
-            gutterBottom 
-            sx={{ mb: 4 }}
-          >
+          <Typography variant="subtitle1" align="center" color="text.secondary" gutterBottom sx={{ mb: 4 }}>
             Информационная система<br />стоматологической клиники
           </Typography>
 
           {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
 
           <Box component="form" onSubmit={handleSubmit}>
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              label="Email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              sx={{ mb: 2.5 }}
-            />
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              label="Пароль"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              sx={{ mb: 3.5 }}
-            />
+            <TextField margin="normal" required fullWidth label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} sx={{ mb: 2.5 }} />
+            <TextField margin="normal" required fullWidth label="Пароль" type="password" value={password} onChange={(e) => setPassword(e.target.value)} sx={{ mb: 3.5 }} />
             
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              size="large"
-              sx={{ 
-                py: 1.7, 
-                fontSize: '1.05rem',
-                bgcolor: '#1565c0',
-                '&:hover': { bgcolor: '#0d47a1' },
-                mb: 2.5,
-                borderRadius: 3
-              }}
-              disabled={loading}
-            >
+            <Button type="submit" fullWidth variant="contained" size="large" sx={{ py: 1.7, fontSize: '1.05rem', bgcolor: '#1565c0', '&:hover': { bgcolor: '#0d47a1' }, mb: 2.5, borderRadius: 3 }} disabled={loading}>
               {loading ? 'Вход...' : 'ВОЙТИ В СИСТЕМУ'}
             </Button>
 
             <Typography align="center" sx={{ color: '#555' }}>
-              Нет аккаунта?{' '}
-              <Link to="/register" style={{ color: '#1565c0', fontWeight: 600, textDecoration: 'none' }}>
-                Зарегистрироваться
-              </Link>
+              Нет аккаунта? <Link to="/register" style={{ color: '#1565c0', fontWeight: 600, textDecoration: 'none' }}>Зарегистрироваться</Link>
             </Typography>
           </Box>
         </Paper>
