@@ -41,7 +41,7 @@ const Login = () => {
         overflow: 'hidden',
       }}
     >
-      {/* Более заметные, но всё равно мягкие лучи */}
+      {/* Заметные мягкие лучи */}
       <Box
         sx={{
           position: 'absolute',
@@ -50,15 +50,16 @@ const Login = () => {
           right: 0,
           bottom: 0,
           backgroundImage: `
-            linear-gradient(125deg, rgba(21, 101, 192, 0.16) 0%, transparent 42%),
-            linear-gradient(140deg, rgba(25, 118, 210, 0.13) 15%, transparent 55%),
-            linear-gradient(115deg, rgba(13, 71, 161, 0.14) 28%, transparent 65%)
+            linear-gradient(125deg, rgba(21, 101, 192, 0.22) 0%, transparent 40%),
+            linear-gradient(140deg, rgba(25, 118, 210, 0.18) 12%, transparent 50%),
+            linear-gradient(115deg, rgba(13, 71, 161, 0.20) 25%, transparent 62%),
+            linear-gradient(135deg, rgba(30, 136, 229, 0.15) 35%, transparent 75%)
           `,
-          backgroundSize: '200% 200%',
-          animation: 'softRaysMove 48s ease-in-out infinite',
+          backgroundSize: '210% 210%',
+          animation: 'softRaysMove 45s ease-in-out infinite',
           '@keyframes softRaysMove': {
             '0%': { backgroundPosition: '0% 0%' },
-            '50%': { backgroundPosition: '32% 38%' },
+            '50%': { backgroundPosition: '35% 40%' },
             '100%': { backgroundPosition: '0% 0%' },
           },
         }}
