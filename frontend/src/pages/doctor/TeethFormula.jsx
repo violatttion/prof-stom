@@ -26,6 +26,7 @@ const TeethFormula = () => {
   const [comment, setComment] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isValidAppointment, setIsValidAppointment] = useState(false);
 
   useEffect(() => {
     fetchTeeth();
@@ -39,15 +40,17 @@ const TeethFormula = () => {
       res.data.forEach(t => { map[t.tooth_number] = t; });
       setTeeth(map);
       setError('');
+      setIsValidAppointment(true);
     } catch (e) {
-      setError('Приём не найден или ещё не создан. Сначала создайте запись на приём этому пациенту.');
+      setError('Этот приём не существует в базе. Зубную формулу можно заполнять только для реальных записей.');
+      setIsValidAppointment(false);
     } finally {
       setLoading(false);
     }
   };
 
   const handleToothClick = (num) => {
-    if (error) return;
+    if (!isValidAppointment) return;
     const existing = teeth[num] || { status: 'healthy', comment: '' };
     setSelectedTooth(num);
     setStatus(existing.status);
@@ -56,6 +59,10 @@ const TeethFormula = () => {
   };
 
   const saveTooth = async () => {
+    if (!isValidAppointment) {
+      alert('Нельзя сохранять данные — приём не существует');
+      return;
+    }
     try {
       await api.put(`/teeth-formula/${appointmentId}`, {
         tooth_number: selectedTooth,
@@ -65,7 +72,7 @@ const TeethFormula = () => {
       setModalOpen(false);
       fetchTeeth();
     } catch (e) {
-      alert('Ошибка сохранения: ' + (e.response?.data?.error || 'Неизвестная ошибка'));
+      alert('Ошибка сохранения: ' + (e.response?.data?.error || e.message));
     }
   };
 
@@ -85,7 +92,7 @@ const TeethFormula = () => {
         </Alert>
       )}
 
-      {!error && (
+      {isValidAppointment && (
         <>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             Нажмите на зуб, чтобы изменить его состояние
@@ -103,7 +110,6 @@ const TeethFormula = () => {
                 </g>
               );
             })}
-
             {toothNumbers.slice(16).map((num, i) => {
               const x = 80 + (i % 8) * 90;
               const y = i < 8 ? 320 : 380;
