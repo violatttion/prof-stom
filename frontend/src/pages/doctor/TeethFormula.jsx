@@ -26,35 +26,28 @@ const TeethFormula = () => {
   const [comment, setComment] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [canSave, setCanSave] = useState(false);
 
   useEffect(() => {
-    const checkAppointment = async () => {
-      setLoading(true);
-      try {
-        // Проверяем, существует ли приём
-        await api.get(`/appointments?appointmentId=${appointmentId}`);
-        setCanSave(true);
-        setError('');
-        
-        // Загружаем зубы
-        const res = await api.get(`/teeth-formula/${appointmentId}`);
-        const map = {};
-        res.data.forEach(t => { map[t.tooth_number] = t; });
-        setTeeth(map);
-      } catch (e) {
-        setError('Приём не найден в базе. Зубную формулу можно использовать только для существующих записей.');
-        setCanSave(false);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    checkAppointment();
+    fetchTeeth();
   }, [appointmentId]);
 
+  const fetchTeeth = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get(`/teeth-formula/${appointmentId}`);
+      const map = {};
+      res.data.forEach(t => { map[t.tooth_number] = t; });
+      setTeeth(map);
+      setError('');
+    } catch (e) {
+      setError('Приём не найден. Откройте зубную формулу через карточку пациента.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleToothClick = (num) => {
-    if (!canSave) return;
+    if (error) return;
     const existing = teeth[num] || { status: 'healthy', comment: '' };
     setSelectedTooth(num);
     setStatus(existing.status);
@@ -63,11 +56,6 @@ const TeethFormula = () => {
   };
 
   const saveTooth = async () => {
-    if (!canSave || !selectedTooth) {
-      alert('Нельзя сохранить — приём не существует в базе');
-      return;
-    }
-
     try {
       await api.put(`/teeth-formula/${appointmentId}`, {
         tooth_number: selectedTooth,
@@ -75,11 +63,7 @@ const TeethFormula = () => {
         comment
       });
       setModalOpen(false);
-      // Перезагружаем данные
-      const res = await api.get(`/teeth-formula/${appointmentId}`);
-      const map = {};
-      res.data.forEach(t => { map[t.tooth_number] = t; });
-      setTeeth(map);
+      fetchTeeth();
     } catch (e) {
       alert('Ошибка сохранения: ' + (e.response?.data?.error || e.message));
     }
@@ -95,13 +79,9 @@ const TeethFormula = () => {
         Интерактивная зубная формула (Приём #{appointmentId})
       </Typography>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
-        </Alert>
-      )}
+      {error && <Alert severity="warning" sx={{ mb: 3 }}>{error}</Alert>}
 
-      {canSave && (
+      {!error && (
         <>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             Нажмите на зуб, чтобы изменить его состояние
@@ -116,7 +96,7 @@ const TeethFormula = () => {
               const color = statusColors[teeth[num]?.status] || statusColors.healthy;
 
               return (
-                <g key={num} onClick={() => handleToothClick(num)} style={{ cursor: canSave ? 'pointer' : 'not-allowed' }}>
+                <g key={num} onClick={() => handleToothClick(num)} style={{ cursor: 'pointer' }}>
                   <circle cx={x} cy={y} r="28" fill={color} stroke="#333" strokeWidth="2" />
                   <text x={x} y={y + 5} textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">{num}</text>
                 </g>
@@ -146,13 +126,7 @@ const TeethFormula = () => {
             sx={{ mt: 2 }} 
           />
 
-          <Button 
-            variant="contained" 
-            fullWidth 
-            sx={{ mt: 2 }} 
-            onClick={saveTooth}
-            disabled={!canSave}
-          >
+          <Button variant="contained" fullWidth sx={{ mt: 2 }} onClick={saveTooth}>
             Сохранить
           </Button>
         </Box>

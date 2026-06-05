@@ -16,16 +16,26 @@ const PatientCard = () => {
       </Alert>
 
       <Typography sx={{ mb: 3 }}>
-        Для просмотра интерактивной зубной формулы нужно сначала создать запись на приём этому пациенту.
+        Выберите приём для просмотра зубной формулы:
       </Typography>
 
       <Button 
         component={Link} 
-        to={`/doctor/teeth/${id}`}   // передаём ID пациента (позже можно улучшить)
+        to="/doctor/teeth/2" 
         variant="contained" 
+        color="secondary" 
+        sx={{ mr: 2, mb: 1 }}
+      >
+        Зубная формула (Приём №2)
+      </Button>
+
+      <Button 
+        component={Link} 
+        to="/doctor/teeth/3" 
+        variant="outlined" 
         color="secondary"
       >
-        Открыть зубную формулу (демо)
+        Зубная формула (Приём №3)
       </Button>
     </Paper>
   );

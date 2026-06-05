@@ -31,16 +31,40 @@ const Login = () => {
   };
 
   return (
-    <Container maxWidth="xs" sx={{ mt: 8 }}>
-      <Paper elevation={3} sx={{ p: 4 }}>
-        <Typography variant="h4" align="center" gutterBottom>
+    <Container maxWidth="xs" sx={{ mt: 10 }}>
+      <Paper 
+        elevation={6} 
+        sx={{ 
+          p: 5, 
+          borderRadius: 4,
+          background: 'linear-gradient(145deg, #f8fbff 0%, #e3f2fd 100%)',
+          border: '1px solid #bbdefb'
+        }}
+      >
+        <Typography 
+          variant="h3" 
+          align="center" 
+          gutterBottom 
+          sx={{ 
+            color: '#1565c0', 
+            fontWeight: 700,
+            letterSpacing: '-1px'
+          }}
+        >
           ПРОФ СТОМ
         </Typography>
-        <Typography variant="subtitle1" align="center" color="text.secondary" gutterBottom>
-          Вход в информационную систему
+        
+        <Typography 
+          variant="subtitle1" 
+          align="center" 
+          color="text.secondary" 
+          gutterBottom 
+          sx={{ mb: 4 }}
+        >
+          Информационная система стоматологической клиники
         </Typography>
 
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
 
         <Box component="form" onSubmit={handleSubmit}>
           <TextField
@@ -51,6 +75,7 @@ const Login = () => {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            sx={{ mb: 2 }}
           />
           <TextField
             margin="normal"
@@ -60,26 +85,23 @@ const Login = () => {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            sx={{ mb: 3 }}
           />
+          
           <Button
             type="submit"
             fullWidth
             variant="contained"
-            sx={{ mt: 3, mb: 2 }}
+            size="large"
+            sx={{ 
+              py: 1.5, 
+              bgcolor: '#1565c0',
+              '&:hover': { bgcolor: '#0d47a1' }
+            }}
             disabled={loading}
           >
-            {loading ? 'Вход...' : 'Войти'}
+            {loading ? 'Вход...' : 'Войти в систему'}
           </Button>
-          <Typography align="center">
-            Нет аккаунта? <Link to="/register">Зарегистрироваться</Link>
-          </Typography>
-        </Box>
-
-        <Box sx={{ mt: 3, p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
-          <Typography variant="caption" display="block">Тестовые данные:</Typography>
-          <Typography variant="caption" display="block">admin@profstom.ru / Admin123</Typography>
-          <Typography variant="caption" display="block">doctor1@profstom.ru / Doctor123</Typography>
-          <Typography variant="caption" display="block">patient1@profstom.ru / Patient123</Typography>
         </Box>
       </Paper>
     </Container>
