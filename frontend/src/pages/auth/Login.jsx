@@ -34,16 +34,16 @@ const Login = () => {
     <Box
       sx={{
         minHeight: '100vh',
-        width: '100%',
+        width: '100vw',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'linear-gradient(135deg, #e3f2fd 0%, #f5f9ff 50%, #e8f4fd 100%)',
+        background: 'linear-gradient(145deg, #e8f4fd 0%, #f0f7ff 50%, #e3f2fd 100%)',
         position: 'relative',
         overflow: 'hidden',
       }}
     >
-      {/* Прерывистые медленно движущиеся линии */}
+      {/* Фон с толстыми прерывистыми лучами (медленное движение) */}
       <Box
         sx={{
           position: 'absolute',
@@ -53,29 +53,29 @@ const Login = () => {
           bottom: 0,
           backgroundImage: `
             repeating-linear-gradient(
-              135deg,
-              rgba(21, 101, 192, 0.08) 0px,
-              rgba(21, 101, 192, 0.08) 3px,
-              transparent 3px,
-              transparent 28px
+              125deg,
+              rgba(21, 101, 192, 0.12) 0px,
+              rgba(21, 101, 192, 0.12) 6px,
+              transparent 6px,
+              transparent 42px
             )
           `,
-          animation: 'moveDashedLines 45s linear infinite',
-          '@keyframes moveDashedLines': {
+          animation: 'moveRays 55s linear infinite',
+          '@keyframes moveRays': {
             '0%': { backgroundPosition: '0 0' },
-            '100%': { backgroundPosition: '120px 120px' },
+            '100%': { backgroundPosition: '280px 280px' },
           },
         }}
       />
 
-      <Container maxWidth="xs" sx={{ position: 'relative', zIndex: 1 }}>
+      <Container maxWidth="xs" sx={{ position: 'relative', zIndex: 2 }}>
         <Paper 
-          elevation={8} 
+          elevation={10} 
           sx={{ 
             p: 5, 
             borderRadius: 5,
             background: 'white',
-            boxShadow: '0 10px 40px rgba(21, 101, 192, 0.15)',
+            boxShadow: '0 15px 50px rgba(13, 71, 161, 0.18)',
             border: '1px solid #bbdefb'
           }}
         >
@@ -86,7 +86,7 @@ const Login = () => {
             sx={{ 
               color: '#0d47a1', 
               fontWeight: 700,
-              letterSpacing: '-1px',
+              letterSpacing: '-1.2px',
               mb: 1
             }}
           >
@@ -98,7 +98,7 @@ const Login = () => {
             align="center" 
             color="text.secondary" 
             gutterBottom 
-            sx={{ mb: 4, fontSize: '1.05rem' }}
+            sx={{ mb: 4 }}
           >
             Информационная система<br />стоматологической клиники
           </Typography>
@@ -138,7 +138,7 @@ const Login = () => {
                 bgcolor: '#1565c0',
                 '&:hover': { bgcolor: '#0d47a1' },
                 mb: 2.5,
-                borderRadius: 2
+                borderRadius: 2.5
               }}
               disabled={loading}
             >
