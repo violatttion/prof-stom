@@ -31,80 +31,135 @@ const Login = () => {
   };
 
   return (
-    <Container maxWidth="xs" sx={{ mt: 10 }}>
-      <Paper 
-        elevation={6} 
-        sx={{ 
-          p: 5, 
-          borderRadius: 4,
-          background: 'linear-gradient(145deg, #f8fbff 0%, #e3f2fd 100%)',
-          border: '1px solid #bbdefb'
+    <Box
+      sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #0d47a1 0%, #1565c0 50%, #1976d2 100%)',
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Анимированный фон с полосками */}
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: `
+            repeating-linear-gradient(
+              135deg,
+              rgba(255,255,255,0.06) 0px,
+              rgba(255,255,255,0.06) 2px,
+              transparent 2px,
+              transparent 12px
+            )
+          `,
+          animation: 'moveStripes 25s linear infinite',
+          '@keyframes moveStripes': {
+            '0%': { backgroundPosition: '0 0' },
+            '100%': { backgroundPosition: '200px 200px' },
+          },
         }}
-      >
-        <Typography 
-          variant="h3" 
-          align="center" 
-          gutterBottom 
+      />
+
+      <Container maxWidth="xs" sx={{ position: 'relative', zIndex: 1 }}>
+        <Paper 
+          elevation={12} 
           sx={{ 
-            color: '#1565c0', 
-            fontWeight: 700,
-            letterSpacing: '-1px'
+            p: 5, 
+            borderRadius: 4,
+            background: 'rgba(255,255,255,0.95)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(21, 101, 192, 0.2)'
           }}
         >
-          ПРОФ СТОМ
-        </Typography>
-        
-        <Typography 
-          variant="subtitle1" 
-          align="center" 
-          color="text.secondary" 
-          gutterBottom 
-          sx={{ mb: 4 }}
-        >
-          Информационная система стоматологической клиники
-        </Typography>
-
-        {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
-
-        <Box component="form" onSubmit={handleSubmit}>
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            label="Email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            label="Пароль"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            sx={{ mb: 3 }}
-          />
-          
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            size="large"
+          <Typography 
+            variant="h3" 
+            align="center" 
+            gutterBottom 
             sx={{ 
-              py: 1.5, 
-              bgcolor: '#1565c0',
-              '&:hover': { bgcolor: '#0d47a1' }
+              color: '#0d47a1', 
+              fontWeight: 700,
+              letterSpacing: '-1.5px',
+              mb: 1
             }}
-            disabled={loading}
           >
-            {loading ? 'Вход...' : 'Войти в систему'}
-          </Button>
-        </Box>
-      </Paper>
-    </Container>
+            ПРОФ СТОМ
+          </Typography>
+          
+          <Typography 
+            variant="subtitle1" 
+            align="center" 
+            color="text.secondary" 
+            gutterBottom 
+            sx={{ mb: 4, fontSize: '1.05rem' }}
+          >
+            Информационная система<br />стоматологической клиники
+          </Typography>
+
+          {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
+
+          <Box component="form" onSubmit={handleSubmit}>
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              label="Email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              sx={{ mb: 2.5 }}
+            />
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              label="Пароль"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              sx={{ mb: 3.5 }}
+            />
+            
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              size="large"
+              sx={{ 
+                py: 1.6, 
+                fontSize: '1.05rem',
+                bgcolor: '#1565c0',
+                '&:hover': { bgcolor: '#0d47a1' },
+                mb: 2
+              }}
+              disabled={loading}
+            >
+              {loading ? 'Вход...' : 'Войти в систему'}
+            </Button>
+
+            <Typography align="center" sx={{ mt: 2 }}>
+              Нет аккаунта?{' '}
+              <Link 
+                to="/register" 
+                style={{ 
+                  color: '#1565c0', 
+                  fontWeight: 600,
+                  textDecoration: 'none'
+                }}
+              >
+                Зарегистрироваться
+              </Link>
+            </Typography>
+          </Box>
+        </Paper>
+      </Container>
+    </Box>
   );
 };
 
