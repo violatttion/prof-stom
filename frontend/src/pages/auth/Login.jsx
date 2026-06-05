@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Container, Paper, TextField, Button, Typography, Box, Alert } from '@mui/material';
+import { Paper, TextField, Button, Typography, Box, Alert } from '@mui/material';
 import { useAuth } from '../../context/AuthContext';
 
 const Login = () => {
@@ -32,7 +32,7 @@ const Login = () => {
     <Box
       sx={{
         minHeight: '100vh',
-        width: '100vw',
+        width: '100%',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -41,7 +41,7 @@ const Login = () => {
         overflow: 'hidden',
       }}
     >
-      {/* Заметные мягкие лучи */}
+      {/* Фон с лучами */}
       <Box
         sx={{
           position: 'absolute',
@@ -65,76 +65,80 @@ const Login = () => {
         }}
       />
 
-      <Container maxWidth="xs" sx={{ position: 'relative', zIndex: 2 }}>
-        <Paper 
-          elevation={12} 
-          sx={{ 
-            p: 5, 
-            borderRadius: 5,
-            background: 'white',
-            boxShadow: '0 20px 60px rgba(13, 71, 161, 0.2)',
-            border: '1px solid #bbdefb'
-          }}
-        >
-          <Typography variant="h3" align="center" gutterBottom sx={{ color: '#0d47a1', fontWeight: 700 }}>
-            ПРОФ СТОМ
-          </Typography>
+      {/* Карточка формы */}
+      <Paper 
+        elevation={12} 
+        sx={{ 
+          p: 5, 
+          borderRadius: 5,
+          background: 'white',
+          boxShadow: '0 20px 60px rgba(13, 71, 161, 0.2)',
+          border: '1px solid #bbdefb',
+          width: '100%',
+          maxWidth: 420,
+          mx: 2,
+          position: 'relative',
+          zIndex: 2
+        }}
+      >
+        <Typography variant="h3" align="center" gutterBottom sx={{ color: '#0d47a1', fontWeight: 700 }}>
+          ПРОФ СТОМ
+        </Typography>
+        
+        <Typography variant="subtitle1" align="center" color="text.secondary" gutterBottom sx={{ mb: 4 }}>
+          Информационная система<br />стоматологической клиники
+        </Typography>
+
+        {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
+
+        <Box component="form" onSubmit={handleSubmit}>
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            label="Email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            sx={{ mb: 2.5 }}
+          />
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            label="Пароль"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            sx={{ mb: 3.5 }}
+          />
           
-          <Typography variant="subtitle1" align="center" color="text.secondary" gutterBottom sx={{ mb: 4 }}>
-            Информационная система<br />стоматологической клиники
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            size="large"
+            sx={{ 
+              py: 1.7, 
+              fontSize: '1.05rem',
+              bgcolor: '#1565c0',
+              '&:hover': { bgcolor: '#0d47a1' },
+              mb: 2.5,
+              borderRadius: 3
+            }}
+            disabled={loading}
+          >
+            {loading ? 'Вход...' : 'ВОЙТИ В СИСТЕМУ'}
+          </Button>
+
+          <Typography align="center" sx={{ color: '#555' }}>
+            Нет аккаунта?{' '}
+            <Link to="/register" style={{ color: '#1565c0', fontWeight: 600, textDecoration: 'none' }}>
+              Зарегистрироваться
+            </Link>
           </Typography>
-
-          {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
-
-          <Box component="form" onSubmit={handleSubmit}>
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              label="Email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              sx={{ mb: 2.5 }}
-            />
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              label="Пароль"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              sx={{ mb: 3.5 }}
-            />
-            
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              size="large"
-              sx={{ 
-                py: 1.7, 
-                fontSize: '1.05rem',
-                bgcolor: '#1565c0',
-                '&:hover': { bgcolor: '#0d47a1' },
-                mb: 2.5,
-                borderRadius: 3
-              }}
-              disabled={loading}
-            >
-              {loading ? 'Вход...' : 'ВОЙТИ В СИСТЕМУ'}
-            </Button>
-
-            <Typography align="center" sx={{ color: '#555' }}>
-              Нет аккаунта?{' '}
-              <Link to="/register" style={{ color: '#1565c0', fontWeight: 600, textDecoration: 'none' }}>
-                Зарегистрироваться
-              </Link>
-            </Typography>
-          </Box>
-        </Paper>
-      </Container>
+        </Box>
+      </Paper>
     </Box>
   );
 };
