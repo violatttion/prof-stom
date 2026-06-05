@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Paper, TextField, Button, Typography, Box, Alert } from '@mui/material';
 import { useAuth } from '../../context/AuthContext';
+import AnimatedBackground from '../components/AnimatedBackground';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -29,113 +30,30 @@ const Login = () => {
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        width: '100%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'linear-gradient(150deg, #f0f7ff 0%, #eaf4fd 40%, #f4f9ff 100%)',
-        position: 'relative',
-        overflow: 'hidden',
-      }}
-    >
-      {/* Фон с лучами */}
-      <Box
-        sx={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundImage: `
-            linear-gradient(125deg, rgba(21, 101, 192, 0.22) 0%, transparent 40%),
-            linear-gradient(140deg, rgba(25, 118, 210, 0.18) 12%, transparent 50%),
-            linear-gradient(115deg, rgba(13, 71, 161, 0.20) 25%, transparent 62%),
-            linear-gradient(135deg, rgba(30, 136, 229, 0.15) 35%, transparent 75%)
-          `,
-          backgroundSize: '210% 210%',
-          animation: 'softRaysMove 45s ease-in-out infinite',
-          '@keyframes softRaysMove': {
-            '0%': { backgroundPosition: '0% 0%' },
-            '50%': { backgroundPosition: '35% 40%' },
-            '100%': { backgroundPosition: '0% 0%' },
-          },
-        }}
-      />
+    <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+      <AnimatedBackground />
 
-      {/* Карточка формы */}
-      <Paper 
-        elevation={12} 
-        sx={{ 
-          p: 5, 
-          borderRadius: 5,
-          background: 'white',
-          boxShadow: '0 20px 60px rgba(13, 71, 161, 0.2)',
-          border: '1px solid #bbdefb',
-          width: '100%',
-          maxWidth: 420,
-          mx: 2,
-          position: 'relative',
-          zIndex: 2
-        }}
-      >
+      <Paper elevation={12} sx={{ p: 5, borderRadius: 5, maxWidth: 420, width: '100%', mx: 2, position: 'relative', zIndex: 1 }}>
         <Typography variant="h3" align="center" gutterBottom sx={{ color: '#0d47a1', fontWeight: 700 }}>
           ПРОФ СТОМ
         </Typography>
         
         <Typography variant="subtitle1" align="center" color="text.secondary" gutterBottom sx={{ mb: 4 }}>
-          Информационная система<br />стоматологической клиники
+          Информационная система стоматологической клиники
         </Typography>
 
         {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
 
         <Box component="form" onSubmit={handleSubmit}>
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            label="Email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            sx={{ mb: 2.5 }}
-          />
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            label="Пароль"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            sx={{ mb: 3.5 }}
-          />
+          <TextField margin="normal" required fullWidth label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} sx={{ mb: 2.5 }} />
+          <TextField margin="normal" required fullWidth label="Пароль" type="password" value={password} onChange={(e) => setPassword(e.target.value)} sx={{ mb: 3.5 }} />
           
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            size="large"
-            sx={{ 
-              py: 1.7, 
-              fontSize: '1.05rem',
-              bgcolor: '#1565c0',
-              '&:hover': { bgcolor: '#0d47a1' },
-              mb: 2.5,
-              borderRadius: 3
-            }}
-            disabled={loading}
-          >
+          <Button type="submit" fullWidth variant="contained" size="large" sx={{ py: 1.7, bgcolor: '#1565c0', '&:hover': { bgcolor: '#0d47a1' }, mb: 2.5, borderRadius: 3 }} disabled={loading}>
             {loading ? 'Вход...' : 'ВОЙТИ В СИСТЕМУ'}
           </Button>
 
-          <Typography align="center" sx={{ color: '#555' }}>
-            Нет аккаунта?{' '}
-            <Link to="/register" style={{ color: '#1565c0', fontWeight: 600, textDecoration: 'none' }}>
-              Зарегистрироваться
-            </Link>
+          <Typography align="center">
+            Нет аккаунта? <Link to="/register" style={{ color: '#1565c0', fontWeight: 600 }}>Зарегистрироваться</Link>
           </Typography>
         </Box>
       </Paper>
