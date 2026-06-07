@@ -21,25 +21,25 @@ const AdminPatients = () => {
       const res = await api.get('/patients');
       setPatients(res.data || []);
     } catch (err) {
-      setError('Не удалось загрузить пациентов');
+      setError('Не удалось загрузить список пациентов');
     }
   };
 
   const filteredPatients = patients.filter(p =>
-    p.full_name?.toLowerCase().includes(search.toLowerCase()) ||
-    p.User?.phone?.includes(search) ||
-    p.User?.email?.toLowerCase().includes(search.toLowerCase())
+    (p.full_name && p.full_name.toLowerCase().includes(search.toLowerCase())) ||
+    (p.User?.phone && p.User.phone.includes(search)) ||
+    (p.User?.email && p.User.email.toLowerCase().includes(search.toLowerCase()))
   );
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Удалить этого пациента?')) return;
+    if (!window.confirm('Вы уверены, что хотите удалить этого пациента?')) return;
 
     try {
       await api.delete(`/patients/${id}`);
-      setSuccess('Пациент удалён');
-      fetchPatients();
+      setSuccess('Пациент успешно удалён');
+      fetchPatients(); // обновляем список
     } catch (err) {
-      setError(err.response?.data?.error || 'Ошибка при удалении');
+      setError(err.response?.data?.error || 'Ошибка при удалении пациента');
     }
   };
 
@@ -49,11 +49,12 @@ const AdminPatients = () => {
         Управление пациентами
       </Typography>
 
-      {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
-      {success && <Alert severity="success" sx={{ mb: 3 }}>{success}</Alert>}
+      {error && <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError('')}>{error}</Alert>}
+      {success && <Alert severity="success" sx={{ mb: 3 }} onClose={() => setSuccess('')}>{success}</Alert>}
 
       <TextField
         label="Поиск по ФИО, телефону или email"
+        variant="outlined"
         fullWidth
         sx={{ mb: 3 }}
         value={search}
@@ -74,7 +75,7 @@ const AdminPatients = () => {
             {filteredPatients.length > 0 ? (
               filteredPatients.map((patient) => (
                 <TableRow key={patient.id}>
-                  <TableCell>{patient.full_name}</TableCell>
+                  <TableCell>{patient.full_name || '—'}</TableCell>
                   <TableCell>{patient.User?.phone || '—'}</TableCell>
                   <TableCell>{patient.User?.email || '—'}</TableCell>
                   <TableCell align="center">
@@ -99,7 +100,9 @@ const AdminPatients = () => {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={4} align="center">Пациенты не найдены</TableCell>
+                <TableCell colSpan={4} align="center">
+                  Пациенты не найдены
+                </TableCell>
               </TableRow>
             )}
           </TableBody>
