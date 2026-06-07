@@ -26,17 +26,24 @@ const PatientCard = () => {
   }, [id]);
 
   const fetchPatientData = async () => {
+    setError('');
     try {
-      const [patientRes, appointmentsRes, teethRes] = await Promise.all([
-        api.get(`/patients/${id}`),
-        api.get(`/appointments?patientId=${id}`),
-        api.get(`/teeth-formula/patient/${id}`)
-      ]);
-
+      const patientRes = await api.get(`/patients/${id}`);
       setPatient(patientRes.data);
+
+      const appointmentsRes = await api.get(`/appointments?patientId=${id}`);
       setAppointments(appointmentsRes.data || []);
-      setTeeth(teethRes.data || []);
+
+      // Зубная формула — делаем безопасно, чтобы не ломало карту у админа
+      try {
+        const teethRes = await api.get(`/teeth-formula/patient/${id}`);
+        setTeeth(teethRes.data || []);
+      } catch (teethErr) {
+        setTeeth([]);
+        // не показываем ошибку зубов — это не критично для просмотра карты
+      }
     } catch (err) {
+      console.error(err);
       setError('Не удалось загрузить данные пациента');
     }
   };
@@ -67,25 +74,46 @@ const PatientCard = () => {
   const exportToPDF = () => {
     if (!patient) return;
 
+    const fullName = patient.User?.full_name || patient.full_name || 'Пациент';
     const doc = new jsPDF();
     doc.setFontSize(16);
     doc.text('Карта пациента', 105, 20, { align: 'center' });
     doc.setFontSize(12);
-    doc.text(`ФИО: ${patient.full_name}`, 20, 40);
-    doc.text(`Телефон: ${patient.User?.phone || '—'}`, 20, 50);
-    doc.text(`Email: ${patient.User?.email || '—'}`, 20, 60);
+    doc.text(`ФИО: ${fullName}`, 20, 40);
+    doc.text(`Телефон: ${patient.User?.phone || patient.phone || '—'}`, 20, 50);
+    doc.text(`Email: ${patient.User?.email || patient.email || '—'}`, 20, 60);
 
     let y = 80;
     doc.text('История посещений:', 20, y);
     y += 10;
 
     appointments.forEach((app, index) => {
-      doc.text(`${index + 1}. ${app.appointment_date} ${app.appointment_time} — ${app.Service?.name || ''}`, 20, y);
+      doc.text(
+        `${index + 1}. ${app.appointment_date} ${app.appointment_time} — ${app.Service?.name || ''}`,
+        20,
+        y
+      );
       y += 10;
     });
 
-    doc.save(`patient_${patient.full_name}.pdf`);
+    doc.save(`patient_${fullName}.pdf`);
   };
+
+  if (error) {
+    return (
+      <PageLayout>
+        <Alert severity="error">{error}</Alert>
+      </PageLayout>
+    );
+  }
+
+  if (!patient) {
+    return (
+      <PageLayout>
+        <Typography>Загрузка данных пациента...</Typography>
+      </PageLayout>
+    );
+  }
 
   return (
     <PageLayout>
@@ -93,16 +121,17 @@ const PatientCard = () => {
         Карта пациента
       </Typography>
 
-      {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
       {success && <Alert severity="success" sx={{ mb: 3 }}>{success}</Alert>}
 
       {/* Основная информация */}
       <Paper elevation={4} sx={{ p: 4, borderRadius: 3, mb: 4 }}>
         <Grid container spacing={2}>
           <Grid item xs={12} md={8}>
-            <Typography variant="h5">{patient?.full_name}</Typography>
-            <Typography><strong>Телефон:</strong> {patient?.User?.phone || '—'}</Typography>
-            <Typography><strong>Email:</strong> {patient?.User?.email || '—'}</Typography>
+            <Typography variant="h5">
+              {patient.User?.full_name || patient.full_name}
+            </Typography>
+            <Typography><strong>Телефон:</strong> {patient.User?.phone || patient.phone || '—'}</Typography>
+            <Typography><strong>Email:</strong> {patient.User?.email || patient.email || '—'}</Typography>
           </Grid>
           <Grid item xs={12} md={4} sx={{ textAlign: { md: 'right' } }}>
             <Button variant="contained" onClick={exportToPDF}>
@@ -143,7 +172,7 @@ const PatientCard = () => {
         </Table>
       </TableContainer>
 
-      {/* Зубная формула */}
+      {/* Зубная формула (только для врача, у админа будет пусто или без ошибки) */}
       <Typography variant="h6" gutterBottom>Зубная формула</Typography>
       <Paper elevation={4} sx={{ p: 3, borderRadius: 3 }}>
         <Grid container spacing={1}>

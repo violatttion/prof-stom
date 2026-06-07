@@ -25,11 +25,15 @@ const AdminPatients = () => {
     }
   };
 
-  const filteredPatients = patients.filter(p =>
-    (p.full_name && p.full_name.toLowerCase().includes(search.toLowerCase())) ||
-    (p.User?.phone && p.User.phone.includes(search)) ||
-    (p.User?.email && p.User.email.toLowerCase().includes(search.toLowerCase()))
-  );
+  const filteredPatients = patients.filter(p => {
+    const fullName = p.User?.full_name || p.full_name || '';
+    const phone = p.User?.phone || p.phone || '';
+    const email = p.User?.email || p.email || '';
+    const s = search.toLowerCase();
+    return fullName.toLowerCase().includes(s) ||
+           phone.includes(search) ||
+           email.toLowerCase().includes(s);
+  });
 
   const handleDelete = async (id) => {
     if (!window.confirm('Вы уверены, что хотите удалить этого пациента?')) return;
@@ -37,7 +41,7 @@ const AdminPatients = () => {
     try {
       await api.delete(`/patients/${id}`);
       setSuccess('Пациент успешно удалён');
-      fetchPatients(); // обновляем список
+      fetchPatients();
     } catch (err) {
       setError(err.response?.data?.error || 'Ошибка при удалении пациента');
     }
@@ -75,9 +79,9 @@ const AdminPatients = () => {
             {filteredPatients.length > 0 ? (
               filteredPatients.map((patient) => (
                 <TableRow key={patient.id}>
-                  <TableCell>{patient.full_name || '—'}</TableCell>
-                  <TableCell>{patient.User?.phone || '—'}</TableCell>
-                  <TableCell>{patient.User?.email || '—'}</TableCell>
+                  <TableCell>{patient.User?.full_name || patient.full_name || '—'}</TableCell>
+                  <TableCell>{patient.User?.phone || patient.phone || '—'}</TableCell>
+                  <TableCell>{patient.User?.email || patient.email || '—'}</TableCell>
                   <TableCell align="center">
                     <Button
                       variant="outlined"
