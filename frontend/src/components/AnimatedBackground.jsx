@@ -5,11 +5,11 @@ const AnimatedBackground = () => {
   return (
     <Box
       sx={{
-        position: 'absolute',
+        position: 'fixed',           // ← изменено на fixed
         top: 0,
         left: 0,
-        right: 0,
-        bottom: 0,
+        width: '100vw',
+        height: '100vh',
         backgroundImage: `
           linear-gradient(120deg, rgba(0, 180, 255, 0.72) 0%, transparent 22%),
           linear-gradient(42deg, rgba(59, 130, 246, 0.65) 8%, transparent 35%),

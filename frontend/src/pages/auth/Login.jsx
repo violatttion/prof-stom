@@ -35,8 +35,7 @@ const Login = () => {
       minHeight: '100vh', 
       width: '100%', 
       position: 'relative', 
-      overflow: 'hidden',
-      background: '#e8f4fd'   // fallback цвет
+      overflow: 'hidden' 
     }}>
       <AnimatedBackground />
       <MouseTrail />
