@@ -6,7 +6,7 @@ const MouseTrail = () => {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { alpha: true });
     let width = window.innerWidth;
     let height = window.innerHeight;
 
@@ -23,28 +23,23 @@ const MouseTrail = () => {
         return;
       }
 
-      // Основной луч
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.92)';
-      ctx.lineWidth = 6;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
+      // Многослойное мягкое свечение (максимальная растушёвка)
+      for (let layer = 0; layer < 5; layer++) {
+        const alpha = (0.18 - layer * 0.03);
+        const lineW = 22 - layer * 3;
 
-      ctx.beginPath();
-      ctx.moveTo(trail[0].x, trail[0].y);
-      for (let i = 1; i < trail.length; i++) {
-        ctx.lineTo(trail[i].x, trail[i].y);
-      }
-      ctx.stroke();
+        ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+        ctx.lineWidth = lineW;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
 
-      // Свечение
-      ctx.strokeStyle = 'rgba(200, 230, 255, 0.38)';
-      ctx.lineWidth = 15;
-      ctx.beginPath();
-      ctx.moveTo(trail[0].x, trail[0].y);
-      for (let i = 1; i < trail.length; i++) {
-        ctx.lineTo(trail[i].x, trail[i].y);
+        ctx.beginPath();
+        ctx.moveTo(trail[0].x, trail[0].y);
+        for (let i = 1; i < trail.length; i++) {
+          ctx.lineTo(trail[i].x, trail[i].y);
+        }
+        ctx.stroke();
       }
-      ctx.stroke();
 
       requestAnimationFrame(draw);
     };
@@ -54,7 +49,7 @@ const MouseTrail = () => {
     const handleMouseMove = (e) => {
       trailRef.current.push({ x: e.clientX, y: e.clientY });
 
-      if (trailRef.current.length > 20) {
+      if (trailRef.current.length > 18) {
         trailRef.current.shift();
       }
     };
