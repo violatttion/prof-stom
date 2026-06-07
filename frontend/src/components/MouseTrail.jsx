@@ -18,22 +18,34 @@ const MouseTrail = () => {
 
       const trail = trailRef.current;
 
-      for (let i = 0; i < trail.length - 1; i++) {
-        const current = trail[i];
-        const next = trail[i + 1];
-
-        const alpha = (i / trail.length) * 0.7;
-
-        // Рисуем тонкий луч между двумя точками
-        ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
-        ctx.lineWidth = 3.5;
-        ctx.lineCap = 'round';
-
-        ctx.beginPath();
-        ctx.moveTo(current.x, current.y);
-        ctx.lineTo(next.x, next.y);
-        ctx.stroke();
+      if (trail.length < 2) {
+        requestAnimationFrame(draw);
+        return;
       }
+
+      // Рисуем толстый луч
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+      ctx.lineWidth = 5;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      ctx.beginPath();
+      ctx.moveTo(trail[0].x, trail[0].y);
+
+      for (let i = 1; i < trail.length; i++) {
+        ctx.lineTo(trail[i].x, trail[i].y);
+      }
+      ctx.stroke();
+
+      // Добавляем лёгкое свечение
+      ctx.strokeStyle = 'rgba(200, 230, 255, 0.4)';
+      ctx.lineWidth = 12;
+      ctx.beginPath();
+      ctx.moveTo(trail[0].x, trail[0].y);
+      for (let i = 1; i < trail.length; i++) {
+        ctx.lineTo(trail[i].x, trail[i].y);
+      }
+      ctx.stroke();
 
       requestAnimationFrame(draw);
     };
@@ -43,8 +55,8 @@ const MouseTrail = () => {
     const handleMouseMove = (e) => {
       trailRef.current.push({ x: e.clientX, y: e.clientY });
 
-      // Делаем след короче
-      if (trailRef.current.length > 12) {
+      // Увеличиваем длину следа
+      if (trailRef.current.length > 22) {
         trailRef.current.shift();
       }
     };
