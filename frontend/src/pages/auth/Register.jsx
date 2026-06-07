@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Paper, TextField, Button, Typography, Box, Alert, MenuItem } from '@mui/material';
-import { useAuth } from '../../context/AuthContext';
 import AnimatedBackground from '../../components/AnimatedBackground';
 
 const Register = () => {
@@ -61,14 +60,7 @@ const Register = () => {
             <MenuItem value="doctor">Врач</MenuItem>
           </TextField>
 
-          <Button 
-            type="submit" 
-            fullWidth 
-            variant="contained" 
-            size="large" 
-            sx={{ mt: 3, py: 1.6, bgcolor: '#1565c0', '&:hover': { bgcolor: '#0d47a1' }, borderRadius: 3 }}
-            disabled={loading}
-          >
+          <Button type="submit" fullWidth variant="contained" size="large" sx={{ mt: 3, py: 1.6, bgcolor: '#1565c0', '&:hover': { bgcolor: '#0d47a1' }, borderRadius: 3 }} disabled={loading}>
             {loading ? 'Регистрация...' : 'Зарегистрироваться'}
           </Button>
 
