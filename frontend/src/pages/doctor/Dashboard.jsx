@@ -32,10 +32,12 @@ const DoctorDashboard = () => {
     }
   };
 
-  const filteredPatients = patients.filter(p =>
-    p.full_name?.toLowerCase().includes(search.toLowerCase()) ||
-    p.User?.phone?.includes(search)
-  );
+  const filteredPatients = patients.filter(p => {
+    const fullName = p.User?.full_name || p.full_name || '';
+    const phone = p.User?.phone || p.phone || '';
+    return fullName.toLowerCase().includes(search.toLowerCase()) ||
+           phone.includes(search);
+  });
 
   return (
     <PageLayout>
@@ -44,6 +46,7 @@ const DoctorDashboard = () => {
       </Typography>
 
       <Grid container spacing={3}>
+        {/* Записи на сегодня */}
         <Grid item xs={12} md={7}>
           <Paper elevation={4} sx={{ p: 3, borderRadius: 3 }}>
             <Typography variant="h6" gutterBottom>Записи на сегодня</Typography>
@@ -61,8 +64,8 @@ const DoctorDashboard = () => {
                     {todayAppointments.map((app) => (
                       <TableRow key={app.id}>
                         <TableCell>{app.appointment_time}</TableCell>
-                        <TableCell>{app.Patient?.User?.full_name}</TableCell>
-                        <TableCell>{app.Service?.name}</TableCell>
+                        <TableCell>{app.Patient?.User?.full_name || '—'}</TableCell>
+                        <TableCell>{app.Service?.name || app.Services?.[0]?.name || '—'}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -74,11 +77,12 @@ const DoctorDashboard = () => {
           </Paper>
         </Grid>
 
+        {/* Мои пациенты (быстрый поиск) */}
         <Grid item xs={12} md={5}>
           <Paper elevation={4} sx={{ p: 3, borderRadius: 3 }}>
             <Typography variant="h6" gutterBottom>Мои пациенты</Typography>
             <TextField
-              label="Поиск"
+              label="Поиск по ФИО или телефону"
               fullWidth
               size="small"
               sx={{ mb: 2 }}
@@ -96,8 +100,8 @@ const DoctorDashboard = () => {
                 <TableBody>
                   {filteredPatients.slice(0, 10).map((patient) => (
                     <TableRow key={patient.id} hover>
-                      <TableCell>{patient.full_name}</TableCell>
-                      <TableCell>{patient.User?.phone || '—'}</TableCell>
+                      <TableCell>{patient.User?.full_name || patient.full_name || '—'}</TableCell>
+                      <TableCell>{patient.User?.phone || patient.phone || '—'}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
