@@ -6,9 +6,10 @@ import {
 } from '@mui/material';
 import { 
   Dashboard, CalendarMonth, People, MedicalServices, 
-  Logout, AccountCircle 
+  Logout 
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
+import PageLayout from './PageLayout';
 
 const drawerWidth = 240;
 
@@ -91,8 +92,10 @@ const Layout = () => {
         </Box>
       </Drawer>
 
-      <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 8 }}>
-        <Outlet />
+      <Box component="main" sx={{ flexGrow: 1, mt: 8 }}>
+        <PageLayout>
+          <Outlet />
+        </PageLayout>
       </Box>
     </Box>
   );

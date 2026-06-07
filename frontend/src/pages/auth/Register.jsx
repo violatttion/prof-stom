@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Paper, TextField, Button, Typography, Box, Alert, MenuItem } from '@mui/material';
-import PageLayout from '../../components/PageLayout';
+import AnimatedBackground from '../../components/AnimatedBackground';
+import MouseTrail from '../../components/MouseTrail';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -21,7 +22,6 @@ const Register = () => {
     setLoading(true);
 
     try {
-      // TODO: Здесь будет реальный запрос на регистрацию
       await new Promise(res => setTimeout(res, 800));
       navigate('/login');
     } catch (err) {
@@ -32,9 +32,19 @@ const Register = () => {
   };
 
   return (
-    <PageLayout maxWidth="xs">
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '85vh' }}>
-        <Paper elevation={12} sx={{ p: 5, borderRadius: 5, maxWidth: 480, width: '100%' }}>
+    <Box sx={{ minHeight: '100vh', width: '100%', position: 'relative', overflow: 'hidden' }}>
+      <AnimatedBackground />
+      <MouseTrail />
+
+      <Box sx={{ 
+        minHeight: '100vh', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        position: 'relative',
+        zIndex: 2 
+      }}>
+        <Paper elevation={12} sx={{ p: 5, borderRadius: 5, maxWidth: 480, width: '100%', mx: 2 }}>
           <Typography variant="h4" align="center" gutterBottom sx={{ color: '#0d47a1', fontWeight: 700 }}>
             Регистрация
           </Typography>
@@ -77,7 +87,7 @@ const Register = () => {
           </Box>
         </Paper>
       </Box>
-    </PageLayout>
+    </Box>
   );
 };
 

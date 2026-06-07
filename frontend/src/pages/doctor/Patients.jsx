@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import {
   Typography, Paper, TextField, Table, TableBody, TableCell,
-  TableContainer, TableHead, TableRow, Chip, Button
+  TableContainer, TableHead, TableRow, Button, Chip
 } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import PageLayout from '../../components/PageLayout';
 import api from '../../api';
 
 const DoctorPatients = () => {
   const [patients, setPatients] = useState([]);
   const [search, setSearch] = useState('');
-  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchPatients();
@@ -17,19 +18,17 @@ const DoctorPatients = () => {
 
   const fetchPatients = async () => {
     try {
-      const res = await api.get('/patients'); // или /doctors/my-patients
+      const res = await api.get('/patients');
       setPatients(res.data);
     } catch (error) {
       console.error(error);
-    } finally {
-      setLoading(false);
     }
   };
 
-  const filteredPatients = patients.filter(patient =>
-    patient.full_name?.toLowerCase().includes(search.toLowerCase()) ||
-    patient.User?.phone?.includes(search) ||
-    patient.User?.email?.toLowerCase().includes(search.toLowerCase())
+  const filteredPatients = patients.filter(p =>
+    p.full_name?.toLowerCase().includes(search.toLowerCase()) ||
+    p.User?.phone?.includes(search) ||
+    p.User?.email?.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -39,7 +38,7 @@ const DoctorPatients = () => {
       </Typography>
 
       <TextField
-        label="Поиск по имени, телефону или email"
+        label="Поиск по ФИО, телефону или email"
         variant="outlined"
         fullWidth
         sx={{ mb: 3 }}
@@ -54,7 +53,6 @@ const DoctorPatients = () => {
               <TableCell><strong>ФИО</strong></TableCell>
               <TableCell><strong>Телефон</strong></TableCell>
               <TableCell><strong>Email</strong></TableCell>
-              <TableCell align="center"><strong>Последняя запись</strong></TableCell>
               <TableCell align="center"><strong>Действия</strong></TableCell>
             </TableRow>
           </TableHead>
@@ -66,13 +64,10 @@ const DoctorPatients = () => {
                   <TableCell>{patient.User?.phone || '—'}</TableCell>
                   <TableCell>{patient.User?.email || '—'}</TableCell>
                   <TableCell align="center">
-                    {patient.last_appointment_date || '—'}
-                  </TableCell>
-                  <TableCell align="center">
-                    <Button 
-                      variant="outlined" 
+                    <Button
+                      variant="outlined"
                       size="small"
-                      onClick={() => window.location.href = `/doctor/patient/${patient.id}`}
+                      onClick={() => navigate(`/doctor/patient/${patient.id}`)}
                     >
                       Открыть карту
                     </Button>
@@ -81,9 +76,7 @@ const DoctorPatients = () => {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={5} align="center">
-                  Пациенты не найдены
-                </TableCell>
+                <TableCell colSpan={4} align="center">Пациенты не найдены</TableCell>
               </TableRow>
             )}
           </TableBody>

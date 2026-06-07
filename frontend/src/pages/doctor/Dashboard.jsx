@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Typography, Paper, Grid, Card, CardContent, Button, TextField,
-  Table, TableBody, TableCell, TableContainer, TableHead, TableRow
+  Typography, Paper, Grid, Card, CardContent, TextField, Table, TableBody, TableCell,
+  TableContainer, TableHead, TableRow, Button
 } from '@mui/material';
 import PageLayout from '../../components/PageLayout';
 import api from '../../api';
@@ -10,7 +10,6 @@ const DoctorDashboard = () => {
   const [todayAppointments, setTodayAppointments] = useState([]);
   const [patients, setPatients] = useState([]);
   const [search, setSearch] = useState('');
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchData();
@@ -20,10 +19,9 @@ const DoctorDashboard = () => {
     try {
       const [appointmentsRes, patientsRes] = await Promise.all([
         api.get('/appointments/my'),
-        api.get('/patients') // или твой эндпоинт для пациентов врача
+        api.get('/patients')
       ]);
 
-      // Фильтруем только сегодняшние записи
       const today = new Date().toISOString().split('T')[0];
       const todayApps = appointmentsRes.data.filter(app => app.appointment_date === today);
 
@@ -31,8 +29,6 @@ const DoctorDashboard = () => {
       setPatients(patientsRes.data);
     } catch (error) {
       console.error(error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -48,11 +44,10 @@ const DoctorDashboard = () => {
       </Typography>
 
       <Grid container spacing={3}>
-        {/* Сегодняшние записи */}
+        {/* Записи на сегодня */}
         <Grid item xs={12} md={7}>
           <Paper elevation={4} sx={{ p: 3, borderRadius: 3 }}>
             <Typography variant="h6" gutterBottom>Записи на сегодня</Typography>
-            
             {todayAppointments.length > 0 ? (
               <TableContainer>
                 <Table size="small">
@@ -61,7 +56,6 @@ const DoctorDashboard = () => {
                       <TableCell><strong>Время</strong></TableCell>
                       <TableCell><strong>Пациент</strong></TableCell>
                       <TableCell><strong>Услуга</strong></TableCell>
-                      <TableCell align="center"><strong>Статус</strong></TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -70,7 +64,6 @@ const DoctorDashboard = () => {
                         <TableCell>{app.appointment_time}</TableCell>
                         <TableCell>{app.Patient?.User?.full_name}</TableCell>
                         <TableCell>{app.Service?.name}</TableCell>
-                        <TableCell align="center">{app.status}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -82,22 +75,19 @@ const DoctorDashboard = () => {
           </Paper>
         </Grid>
 
-        {/* Быстрый поиск пациентов */}
+        {/* Пациенты */}
         <Grid item xs={12} md={5}>
           <Paper elevation={4} sx={{ p: 3, borderRadius: 3 }}>
             <Typography variant="h6" gutterBottom>Мои пациенты</Typography>
-            
             <TextField
-              label="Поиск по имени или телефону"
-              variant="outlined"
+              label="Поиск"
               fullWidth
               size="small"
               sx={{ mb: 2 }}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
-
-            <TableContainer sx={{ maxHeight: 300 }}>
+            <TableContainer sx={{ maxHeight: 280 }}>
               <Table size="small">
                 <TableHead>
                   <TableRow>
@@ -106,7 +96,7 @@ const DoctorDashboard = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {filteredPatients.slice(0, 8).map((patient) => (
+                  {filteredPatients.slice(0, 10).map((patient) => (
                     <TableRow key={patient.id} hover>
                       <TableCell>{patient.full_name}</TableCell>
                       <TableCell>{patient.User?.phone}</TableCell>
