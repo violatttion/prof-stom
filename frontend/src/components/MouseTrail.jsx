@@ -6,7 +6,7 @@ const MouseTrail = () => {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d', { alpha: true });
+    const ctx = canvas.getContext('2d');
     let width = window.innerWidth;
     let height = window.innerHeight;
 
@@ -23,7 +23,7 @@ const MouseTrail = () => {
         return;
       }
 
-      // Многослойное мягкое свечение (максимальная растушёвка)
+      // Многослойное мягкое свечение
       for (let layer = 0; layer < 5; layer++) {
         const alpha = (0.18 - layer * 0.03);
         const lineW = 22 - layer * 3;
@@ -77,8 +77,8 @@ const MouseTrail = () => {
         position: 'fixed',
         top: 0,
         left: 0,
-        width: '100vw',
-        height: '100vh',
+        width: '100%',
+        height: '100%',
         zIndex: 1,
         pointerEvents: 'none',
       }}

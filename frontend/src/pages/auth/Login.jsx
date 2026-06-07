@@ -37,8 +37,7 @@ const Login = () => {
       overflow: 'hidden',
       position: 'relative',
       margin: 0,
-      padding: 0,
-      boxSizing: 'border-box'
+      padding: 0
     }}>
       <AnimatedBackground />
       <MouseTrail />
