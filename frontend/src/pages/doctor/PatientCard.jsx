@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Typography, Paper, Grid, Button, Table, TableBody, TableCell,
   TableContainer, TableHead, TableRow, Alert, TextField, Chip,
-  Dialog, DialogTitle, DialogContent, DialogActions, Box
+  Dialog, DialogTitle, DialogContent, DialogActions, Box, Collapse
 } from '@mui/material';
 import PageLayout from '../../components/PageLayout';
 import api from '../../api';
@@ -24,8 +24,13 @@ const translit = (text) => {
 };
 
 const pdfStatusLabels = {
-  healthy: 'Healthy', caries: 'Caries', filling: 'Filling',
-  extracted: 'Extracted', implant: 'Implant', crown: 'Crown', root_canal: 'Root Canal Treatment'
+  healthy: 'Healthy',
+  caries: 'Caries',
+  filling: 'Filling',
+  extracted: 'Extracted',
+  implant: 'Implant',
+  crown: 'Crown',
+  root_canal: 'Root Canal Treatment'
 };
 
 const PatientCard = () => {
@@ -41,6 +46,9 @@ const PatientCard = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showFormula, setShowFormula] = useState(false);
+
+  const formulaRef = useRef(null);
 
   const allTeethNumbers = Array.from({ length: 32 }, (_, i) => i + 1);
 
@@ -61,7 +69,6 @@ const PatientCard = () => {
       );
       setAppointments(sortedApps);
 
-      // Всегда работаем с формулой последнего приёма
       if (sortedApps.length > 0) {
         const latestId = sortedApps[0].id;
         setSelectedAppointmentId(latestId);
@@ -81,7 +88,6 @@ const PatientCard = () => {
     }
   };
 
-  // Только последний приём можно редактировать
   const handleSelectAppointment = async (appointmentId) => {
     const latestId = appointments.length > 0 ? appointments[0].id : null;
     if (appointmentId !== latestId) {
@@ -91,10 +97,19 @@ const PatientCard = () => {
     }
     setSelectedAppointmentId(appointmentId);
     await loadTeethForAppointment(appointmentId);
+
+    setShowFormula(true);
+    setTimeout(() => {
+      formulaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 80);
   };
 
   const getToothData = (number) => {
-    return teeth.find(t => t.tooth_number === number) || { tooth_number: number, status: 'healthy', comment: '' };
+    return teeth.find(t => t.tooth_number === number) || {
+      tooth_number: number,
+      status: 'healthy',
+      comment: ''
+    };
   };
 
   const handleToothClick = (number) => {
@@ -107,6 +122,7 @@ const PatientCard = () => {
 
   const handleSaveTooth = async () => {
     if (!selectedTooth || !selectedAppointmentId) return;
+
     try {
       await api.put(`/teeth-formula/${selectedAppointmentId}`, {
         tooth_number: selectedTooth.tooth_number,
@@ -121,7 +137,6 @@ const PatientCard = () => {
     }
   };
 
-  // ==================== PDF ====================
   const exportToPDF = () => {
     if (!patient) return;
 
@@ -142,7 +157,6 @@ const PatientCard = () => {
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
     doc.text("Patient Information", 20, 38);
-
     doc.setFontSize(11);
     doc.setFont("helvetica", "normal");
     doc.text(`Full Name: ${translit(fullName)}`, 20, 46);
@@ -152,7 +166,6 @@ const PatientCard = () => {
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
     doc.text("Appointment History", 20, 70);
-
     let y = 78;
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
@@ -160,7 +173,7 @@ const PatientCard = () => {
     if (appointments.length > 0) {
       appointments.forEach((app, index) => {
         const service = translit(app.Service?.name || app.Services?.[0]?.name || '—');
-        doc.text(`${index + 1}. ${app.appointment_date}  |  ${app.appointment_time}  |  ${service}  |  ${app.status}`, 20, y);
+        doc.text(`${index + 1}. ${app.appointment_date} | ${app.appointment_time} | ${service} | ${app.status}`, 20, y);
         y += 6;
       });
     } else {
@@ -172,9 +185,6 @@ const PatientCard = () => {
     doc.setFont("helvetica", "bold");
     doc.text("Dental Formula Status (Latest Visit)", 20, y);
     y += 7;
-
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
 
     const problemTeeth = teeth.filter(t => t.status && t.status !== 'healthy');
     if (problemTeeth.length > 0) {
@@ -218,7 +228,6 @@ const PatientCard = () => {
         </Grid>
       </Paper>
 
-      {/* История приёмов */}
       <Typography variant="h6" gutterBottom>История приёмов</Typography>
       <TableContainer component={Paper} elevation={4} sx={{ borderRadius: 3, mb: 4 }}>
         <Table>
@@ -232,7 +241,7 @@ const PatientCard = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {appointments.length > 0 ? appointments.map((app) => (
+            {appointments.map((app) => (
               <TableRow key={app.id}>
                 <TableCell>{app.appointment_date}</TableCell>
                 <TableCell>{app.appointment_time}</TableCell>
@@ -240,67 +249,56 @@ const PatientCard = () => {
                 <TableCell>{app.status}</TableCell>
                 <TableCell align="center">
                   {app.id === latestAppointmentId ? (
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      onClick={() => handleSelectAppointment(app.id)}
-                    >
+                    <Button variant="outlined" size="small" onClick={() => handleSelectAppointment(app.id)}>
                       Открыть формулу
                     </Button>
                   ) : (
-                    <Chip 
-                      label="удалено" 
-                      color="error" 
-                      size="small" 
-                      sx={{ fontWeight: 700, minWidth: 80 }}
-                    />
+                    <Chip label="удалено" color="error" size="small" sx={{ fontWeight: 700 }} />
                   )}
                 </TableCell>
               </TableRow>
-            )) : (
-              <TableRow><TableCell colSpan={5} align="center">Приёмов пока нет</TableCell></TableRow>
-            )}
+            ))}
           </TableBody>
         </Table>
       </TableContainer>
 
-      {/* Зубная формула — только последнего приёма */}
-      <Typography variant="h6" gutterBottom>
-        Зубная формула (последний приём)
-        {selectedAppointmentId && latestAppointmentId && selectedAppointmentId === latestAppointmentId && (
-          <Typography component="span" variant="body2" sx={{ ml: 2, color: 'text.secondary' }}>
-            (актуальное состояние)
-          </Typography>
-        )}
-      </Typography>
+      {/* ЗУБНАЯ ФОРМУЛА С РАСКРЫТИЕМ */}
+      <Box ref={formulaRef}>
+        <Button
+          variant="contained"
+          onClick={() => setShowFormula(!showFormula)}
+          sx={{ mb: 2 }}
+        >
+          {showFormula ? 'Скрыть зубную формулу' : 'Показать зубную формулу'}
+        </Button>
 
-      <Paper elevation={4} sx={{ p: 3, borderRadius: 3, mb: 4 }}>
-        <Grid container spacing={1}>
-          {allTeethNumbers.map((num) => {
-            const tooth = getToothData(num);
-            return (
-              <Grid item xs={2} sm={1.5} key={num}>
-                <Button
-                  variant="outlined"
-                  fullWidth
-                  onClick={() => handleToothClick(num)}
-                  sx={{ minHeight: 58, fontWeight: 600 }}
-                >
-                  {num}
-                  {tooth.status && tooth.status !== 'healthy' && (
-                    <Chip label={tooth.status} color="primary" size="small" sx={{ ml: 0.5, fontSize: '0.6rem' }} />
-                  )}
-                </Button>
-              </Grid>
-            );
-          })}
-        </Grid>
-        <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: 'block' }}>
-          Редактирование зубной формулы доступно только для последнего приёма. Формулы предыдущих визитов перенесены и удалены из истории.
-        </Typography>
-      </Paper>
+        <Collapse in={showFormula}>
+          <Typography variant="h6" gutterBottom>Зубная формула (последний приём)</Typography>
+          <Paper elevation={4} sx={{ p: 3, borderRadius: 3, mb: 4 }}>
+            <Grid container spacing={1}>
+              {allTeethNumbers.map((num) => {
+                const tooth = getToothData(num);
+                return (
+                  <Grid item xs={2} sm={1.5} key={num}>
+                    <Button
+                      variant="outlined"
+                      fullWidth
+                      onClick={() => handleToothClick(num)}
+                      sx={{ minHeight: 58, fontWeight: 600 }}
+                    >
+                      {num}
+                      {tooth.status && tooth.status !== 'healthy' && (
+                        <Chip label={tooth.status} color="primary" size="small" sx={{ ml: 0.5 }} />
+                      )}
+                    </Button>
+                  </Grid>
+                );
+              })}
+            </Grid>
+          </Paper>
+        </Collapse>
+      </Box>
 
-      {/* Модалка */}
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Зуб №{selectedTooth?.tooth_number}</DialogTitle>
         <DialogContent>
@@ -321,7 +319,15 @@ const PatientCard = () => {
             <option value="crown">Коронка</option>
             <option value="root_canal">Лечение каналов</option>
           </TextField>
-          <TextField label="Комментарий" fullWidth margin="normal" multiline rows={4} value={comment} onChange={(e) => setComment(e.target.value)} />
+          <TextField
+            label="Комментарий"
+            fullWidth
+            margin="normal"
+            multiline
+            rows={4}
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+          />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenDialog(false)}>Отмена</Button>

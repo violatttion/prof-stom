@@ -71,14 +71,26 @@ const BookAppointment = () => {
 
   return (
     <PageLayout>
-      <Typography variant="h4" gutterBottom sx={{ color: '#0d47a1', fontWeight: 700, mb: 4 }}>
+      <Typography 
+        variant="h4" 
+        gutterBottom 
+        sx={{ color: '#fff', fontWeight: 700, mb: 4 }}
+      >
         Записаться на приём
       </Typography>
 
       {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
       {success && <Alert severity="success" sx={{ mb: 3 }}>{success}</Alert>}
 
-      <Paper elevation={4} sx={{ p: 4, borderRadius: 3, maxWidth: 600 }}>
+      <Paper 
+        elevation={4} 
+        sx={{ 
+          p: 4, 
+          borderRadius: 3, 
+          maxWidth: 600, 
+          mx: 'auto' 
+        }}
+      >
         <Box component="form" onSubmit={handleSubmit}>
           <TextField
             select
@@ -114,11 +126,49 @@ const BookAppointment = () => {
             ))}
           </TextField>
 
-          <TextField name="appointment_date" label="Дата" type="date" fullWidth margin="normal" value={formData.appointment_date} onChange={handleChange} required InputLabelProps={{ shrink: true }} />
-          <TextField name="appointment_time" label="Время" type="time" fullWidth margin="normal" value={formData.appointment_time} onChange={handleChange} required InputLabelProps={{ shrink: true }} />
-          <TextField name="notes" label="Примечание" fullWidth margin="normal" multiline rows={3} value={formData.notes} onChange={handleChange} />
+          <TextField
+            name="appointment_date"
+            label="Дата"
+            type="date"
+            fullWidth
+            margin="normal"
+            value={formData.appointment_date}
+            onChange={handleChange}
+            required
+            InputLabelProps={{ shrink: true }}
+          />
 
-          <Button type="submit" variant="contained" size="large" fullWidth sx={{ mt: 3, py: 1.5 }} disabled={loading}>
+          <TextField
+            name="appointment_time"
+            label="Время"
+            type="time"
+            fullWidth
+            margin="normal"
+            value={formData.appointment_time}
+            onChange={handleChange}
+            required
+            InputLabelProps={{ shrink: true }}
+          />
+
+          <TextField
+            name="notes"
+            label="Примечание"
+            fullWidth
+            margin="normal"
+            multiline
+            rows={3}
+            value={formData.notes}
+            onChange={handleChange}
+          />
+
+          <Button
+            type="submit"
+            variant="contained"
+            size="large"
+            fullWidth
+            sx={{ mt: 3, py: 1.5 }}
+            disabled={loading}
+          >
             {loading ? 'Запись...' : 'Записаться'}
           </Button>
         </Box>

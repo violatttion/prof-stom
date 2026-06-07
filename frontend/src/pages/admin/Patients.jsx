@@ -49,7 +49,11 @@ const AdminPatients = () => {
 
   return (
     <PageLayout>
-      <Typography variant="h4" gutterBottom sx={{ color: '#0d47a1', fontWeight: 700, mb: 4 }}>
+      <Typography 
+        variant="h4" 
+        gutterBottom 
+        sx={{ color: '#fff', fontWeight: 700, mb: 4 }}
+      >
         Управление пациентами
       </Typography>
 
@@ -60,7 +64,14 @@ const AdminPatients = () => {
         label="Поиск по ФИО, телефону или email"
         variant="outlined"
         fullWidth
-        sx={{ mb: 3 }}
+        sx={{
+          mb: 3,
+          '& .MuiOutlinedInput-root': {
+            color: '#fff',
+            '& fieldset': { borderColor: '#fff' }
+          },
+          '& .MuiInputLabel-root': { color: '#fff' }
+        }}
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />

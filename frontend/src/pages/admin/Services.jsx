@@ -43,34 +43,35 @@ const AdminServices = () => {
       setSuccess('Услуга успешно добавлена');
       setNewService({ name: '', category: '', price: '' });
       setOpen(false);
-      fetchServices(); // обновляем список
+      fetchServices();
     } catch (err) {
       setError(err.response?.data?.error || 'Ошибка при добавлении услуги');
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Удалить эту услугу?')) return;
-
-    try {
-      await api.delete(`/services/${id}`);
-      setSuccess('Услуга удалена');
-      fetchServices();
-    } catch (err) {
-      setError(err.response?.data?.error || 'Ошибка при удалении');
-    }
-  };
-
   return (
     <PageLayout>
-      <Typography variant="h4" gutterBottom sx={{ color: '#0d47a1', fontWeight: 700, mb: 4 }}>
+      <Typography 
+        variant="h4" 
+        gutterBottom 
+        sx={{ color: '#fff', fontWeight: 700, mb: 4 }}
+      >
         Управление услугами
       </Typography>
 
       {error && <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError('')}>{error}</Alert>}
       {success && <Alert severity="success" sx={{ mb: 3 }} onClose={() => setSuccess('')}>{success}</Alert>}
 
-      <Button variant="contained" sx={{ mb: 3 }} onClick={() => setOpen(true)}>
+      <Button 
+        variant="contained" 
+        onClick={() => setOpen(true)} 
+        sx={{ 
+          mb: 3,
+          bgcolor: '#fff', 
+          color: '#0d47a1',
+          '&:hover': { bgcolor: '#e3f2fd' }
+        }}
+      >
         Добавить услугу
       </Button>
 
@@ -78,41 +79,23 @@ const AdminServices = () => {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell><strong>Название услуги</strong></TableCell>
+              <TableCell><strong>Название</strong></TableCell>
               <TableCell><strong>Категория</strong></TableCell>
-              <TableCell align="right"><strong>Стоимость (₽)</strong></TableCell>
-              <TableCell align="center"><strong>Действия</strong></TableCell>
+              <TableCell><strong>Цена</strong></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {services.length > 0 ? (
-              services.map((service) => (
-                <TableRow key={service.id}>
-                  <TableCell>{service.name}</TableCell>
-                  <TableCell>{service.category}</TableCell>
-                  <TableCell align="right">{service.price}</TableCell>
-                  <TableCell align="center">
-                    <Button
-                      variant="outlined"
-                      color="error"
-                      size="small"
-                      onClick={() => handleDelete(service.id)}
-                    >
-                      Удалить
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={4} align="center">Услуг пока нет</TableCell>
+            {services.map((service) => (
+              <TableRow key={service.id}>
+                <TableCell>{service.name}</TableCell>
+                <TableCell>{service.category}</TableCell>
+                <TableCell>{service.price} ₽</TableCell>
               </TableRow>
-            )}
+            ))}
           </TableBody>
         </Table>
       </TableContainer>
 
-      {/* Диалог добавления услуги */}
       <Dialog open={open} onClose={() => setOpen(false)}>
         <DialogTitle>Добавить новую услугу</DialogTitle>
         <DialogContent>
@@ -131,7 +114,7 @@ const AdminServices = () => {
             onChange={(e) => setNewService({ ...newService, category: e.target.value })}
           />
           <TextField
-            label="Стоимость"
+            label="Цена"
             type="number"
             fullWidth
             margin="normal"

@@ -41,7 +41,7 @@ const DoctorDashboard = () => {
            phone.includes(search);
   });
 
-  // Клик по записи → открываем карту пациента
+  // Клик по записи на сегодня → открываем карту пациента
   const handleAppointmentClick = (patientId) => {
     if (patientId) {
       navigate(`/doctor/patient/${patientId}`);
@@ -50,7 +50,11 @@ const DoctorDashboard = () => {
 
   return (
     <PageLayout>
-      <Typography variant="h4" gutterBottom sx={{ color: '#0d47a1', fontWeight: 700, mb: 4 }}>
+      <Typography 
+        variant="h4" 
+        gutterBottom 
+        sx={{ color: '#fff', fontWeight: 700, mb: 4 }}
+      >
         Дашборд врача
       </Typography>
 
@@ -94,15 +98,30 @@ const DoctorDashboard = () => {
         {/* Мои пациенты */}
         <Grid item xs={12} md={5}>
           <Paper elevation={4} sx={{ p: 3, borderRadius: 3 }}>
-            <Typography variant="h6" gutterBottom>Мои пациенты</Typography>
+            <Typography 
+              variant="h6" 
+              gutterBottom 
+              sx={{ color: '#fff' }}
+            >
+              Мои пациенты
+            </Typography>
+
             <TextField
               label="Поиск по ФИО или телефону"
               fullWidth
               size="small"
-              sx={{ mb: 2 }}
+              sx={{
+                mb: 2,
+                '& .MuiOutlinedInput-root': {
+                  color: '#fff',
+                  '& fieldset': { borderColor: '#fff' }
+                },
+                '& .MuiInputLabel-root': { color: '#fff' }
+              }}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
+
             <TableContainer sx={{ maxHeight: 280 }}>
               <Table size="small">
                 <TableHead>

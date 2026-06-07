@@ -71,7 +71,11 @@ const AdminCalendar = () => {
 
   return (
     <PageLayout>
-      <Typography variant="h4" gutterBottom sx={{ color: '#0d47a1', fontWeight: 700, mb: 4 }}>
+      <Typography 
+        variant="h4" 
+        gutterBottom 
+        sx={{ color: '#fff', fontWeight: 700, mb: 4 }}
+      >
         Календарь записей
       </Typography>
 
@@ -99,9 +103,7 @@ const AdminCalendar = () => {
                   <TableCell>{app.appointment_time}</TableCell>
                   <TableCell>{app.Patient?.User?.full_name || '—'}</TableCell>
                   <TableCell>{app.Doctor?.User?.full_name || '—'}</TableCell>
-                  <TableCell>
-                    {app.Services?.[0]?.name || app.Service?.name || '—'}
-                  </TableCell>
+                  <TableCell>{app.Services?.[0]?.name || app.Service?.name || '—'}</TableCell>
                   <TableCell align="center">
                     <Chip label={app.status} color={getStatusColor(app.status)} size="small" />
                   </TableCell>
