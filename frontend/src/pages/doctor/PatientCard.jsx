@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   Typography, Paper, Grid, Button, Table, TableBody, TableCell,
-  TableContainer, TableHead, TableRow, Alert
+  TableContainer, TableHead, TableRow, Alert, TextField, Chip,
+  Dialog, DialogTitle, DialogContent, DialogActions
 } from '@mui/material';
 import PageLayout from '../../components/PageLayout';
 import api from '../../api';
@@ -12,7 +13,13 @@ const PatientCard = () => {
   const { id } = useParams();
   const [patient, setPatient] = useState(null);
   const [appointments, setAppointments] = useState([]);
+  const [teeth, setTeeth] = useState([]);
+  const [selectedTooth, setSelectedTooth] = useState(null);
+  const [status, setStatus] = useState('');
+  const [comment, setComment] = useState('');
+  const [openDialog, setOpenDialog] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
     fetchPatientData();
@@ -20,14 +27,40 @@ const PatientCard = () => {
 
   const fetchPatientData = async () => {
     try {
-      const [patientRes, appointmentsRes] = await Promise.all([
+      const [patientRes, appointmentsRes, teethRes] = await Promise.all([
         api.get(`/patients/${id}`),
-        api.get(`/appointments?patientId=${id}`)
+        api.get(`/appointments?patientId=${id}`),
+        api.get(`/teeth-formula/patient/${id}`)
       ]);
+
       setPatient(patientRes.data);
-      setAppointments(appointmentsRes.data);
+      setAppointments(appointmentsRes.data || []);
+      setTeeth(teethRes.data || []);
     } catch (err) {
       setError('Не удалось загрузить данные пациента');
+    }
+  };
+
+  const handleToothClick = (tooth) => {
+    setSelectedTooth(tooth);
+    setStatus(tooth.status || 'healthy');
+    setComment(tooth.comment || '');
+    setOpenDialog(true);
+  };
+
+  const handleSaveTooth = async () => {
+    if (!selectedTooth) return;
+
+    try {
+      await api.put(`/teeth-formula/${selectedTooth.id}`, {
+        status,
+        comment
+      });
+      setSuccess('Зуб обновлён');
+      setOpenDialog(false);
+      fetchPatientData();
+    } catch (err) {
+      setError('Ошибка сохранения');
     }
   };
 
@@ -35,18 +68,17 @@ const PatientCard = () => {
     if (!patient) return;
 
     const doc = new jsPDF();
-    doc.setFontSize(18);
+    doc.setFontSize(16);
     doc.text('Карта пациента', 105, 20, { align: 'center' });
-
     doc.setFontSize(12);
     doc.text(`ФИО: ${patient.full_name}`, 20, 40);
     doc.text(`Телефон: ${patient.User?.phone || '—'}`, 20, 50);
     doc.text(`Email: ${patient.User?.email || '—'}`, 20, 60);
-    doc.text(`Дата рождения: ${patient.birth_date || '—'}`, 20, 70);
 
-    doc.text('История посещений:', 20, 90);
+    let y = 80;
+    doc.text('История посещений:', 20, y);
+    y += 10;
 
-    let y = 100;
     appointments.forEach((app, index) => {
       doc.text(`${index + 1}. ${app.appointment_date} ${app.appointment_time} — ${app.Service?.name || ''}`, 20, y);
       y += 10;
@@ -55,34 +87,34 @@ const PatientCard = () => {
     doc.save(`patient_${patient.full_name}.pdf`);
   };
 
-  if (error) return <PageLayout><Alert severity="error">{error}</Alert></PageLayout>;
-  if (!patient) return <PageLayout><Typography>Загрузка...</Typography></PageLayout>;
-
   return (
     <PageLayout>
       <Typography variant="h4" gutterBottom sx={{ color: '#0d47a1', fontWeight: 700 }}>
         Карта пациента
       </Typography>
 
+      {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
+      {success && <Alert severity="success" sx={{ mb: 3 }}>{success}</Alert>}
+
+      {/* Основная информация */}
       <Paper elevation={4} sx={{ p: 4, borderRadius: 3, mb: 4 }}>
         <Grid container spacing={2}>
           <Grid item xs={12} md={8}>
-            <Typography variant="h5">{patient.full_name}</Typography>
-            <Typography><strong>Телефон:</strong> {patient.User?.phone || '—'}</Typography>
-            <Typography><strong>Email:</strong> {patient.User?.email || '—'}</Typography>
-            <Typography><strong>Дата рождения:</strong> {patient.birth_date || '—'}</Typography>
+            <Typography variant="h5">{patient?.full_name}</Typography>
+            <Typography><strong>Телефон:</strong> {patient?.User?.phone || '—'}</Typography>
+            <Typography><strong>Email:</strong> {patient?.User?.email || '—'}</Typography>
           </Grid>
           <Grid item xs={12} md={4} sx={{ textAlign: { md: 'right' } }}>
-            <Button variant="contained" onClick={exportToPDF} sx={{ mt: { xs: 2, md: 0 } }}>
+            <Button variant="contained" onClick={exportToPDF}>
               Экспорт в PDF
             </Button>
           </Grid>
         </Grid>
       </Paper>
 
+      {/* История посещений */}
       <Typography variant="h6" gutterBottom>История посещений</Typography>
-
-      <TableContainer component={Paper} elevation={4} sx={{ borderRadius: 3 }}>
+      <TableContainer component={Paper} elevation={4} sx={{ borderRadius: 3, mb: 4 }}>
         <Table>
           <TableHead>
             <TableRow>
@@ -110,6 +142,63 @@ const PatientCard = () => {
           </TableBody>
         </Table>
       </TableContainer>
+
+      {/* Зубная формула */}
+      <Typography variant="h6" gutterBottom>Зубная формула</Typography>
+      <Paper elevation={4} sx={{ p: 3, borderRadius: 3 }}>
+        <Grid container spacing={1}>
+          {teeth.length > 0 ? (
+            teeth.map((tooth) => (
+              <Grid item xs={2} sm={1.5} key={tooth.id}>
+                <Button
+                  variant="outlined"
+                  fullWidth
+                  onClick={() => handleToothClick(tooth)}
+                >
+                  {tooth.tooth_number}
+                </Button>
+              </Grid>
+            ))
+          ) : (
+            <Typography color="text.secondary">Зубная формула пока не заполнена</Typography>
+          )}
+        </Grid>
+      </Paper>
+
+      {/* Диалог редактирования зуба */}
+      <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+        <DialogTitle>Зуб №{selectedTooth?.tooth_number}</DialogTitle>
+        <DialogContent>
+          <TextField
+            select
+            label="Состояние"
+            fullWidth
+            margin="normal"
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+          >
+            <option value="healthy">Здоров</option>
+            <option value="caries">Кариес</option>
+            <option value="extracted">Удалён</option>
+            <option value="implant">Имплант</option>
+            <option value="crown">Коронка</option>
+          </TextField>
+
+          <TextField
+            label="Комментарий"
+            fullWidth
+            margin="normal"
+            multiline
+            rows={4}
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenDialog(false)}>Отмена</Button>
+          <Button variant="contained" onClick={handleSaveTooth}>Сохранить</Button>
+        </DialogActions>
+      </Dialog>
     </PageLayout>
   );
 };

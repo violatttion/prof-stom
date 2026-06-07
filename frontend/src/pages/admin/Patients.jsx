@@ -1,24 +1,47 @@
 import React, { useState, useEffect } from 'react';
-import { Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Button } from '@mui/material';
+import {
+  Typography, Paper, TextField, Table, TableBody, TableCell,
+  TableContainer, TableHead, TableRow, Button, Alert
+} from '@mui/material';
 import PageLayout from '../../components/PageLayout';
+import api from '../../api';
 
 const AdminPatients = () => {
   const [patients, setPatients] = useState([]);
   const [search, setSearch] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
-  // TODO: Здесь будет реальный запрос к API
   useEffect(() => {
-    // Временные данные
-    setPatients([
-      { id: 1, fullName: 'Иванов Иван Иванович', email: 'ivanov@mail.ru', phone: '+7 999 123-45-67' },
-      { id: 2, fullName: 'Петрова Анна Сергеевна', email: 'petrova@mail.ru', phone: '+7 999 987-65-43' },
-    ]);
+    fetchPatients();
   }, []);
 
+  const fetchPatients = async () => {
+    try {
+      const res = await api.get('/patients');
+      setPatients(res.data || []);
+    } catch (err) {
+      setError('Не удалось загрузить пациентов');
+    }
+  };
+
   const filteredPatients = patients.filter(p =>
-    p.fullName.toLowerCase().includes(search.toLowerCase()) ||
-    p.email.toLowerCase().includes(search.toLowerCase())
+    p.full_name?.toLowerCase().includes(search.toLowerCase()) ||
+    p.User?.phone?.includes(search) ||
+    p.User?.email?.toLowerCase().includes(search.toLowerCase())
   );
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Удалить этого пациента?')) return;
+
+    try {
+      await api.delete(`/patients/${id}`);
+      setSuccess('Пациент удалён');
+      fetchPatients();
+    } catch (err) {
+      setError(err.response?.data?.error || 'Ошибка при удалении');
+    }
+  };
 
   return (
     <PageLayout>
@@ -26,9 +49,11 @@ const AdminPatients = () => {
         Управление пациентами
       </Typography>
 
+      {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
+      {success && <Alert severity="success" sx={{ mb: 3 }}>{success}</Alert>}
+
       <TextField
-        label="Поиск по имени или email"
-        variant="outlined"
+        label="Поиск по ФИО, телефону или email"
         fullWidth
         sx={{ mb: 3 }}
         value={search}
@@ -40,23 +65,43 @@ const AdminPatients = () => {
           <TableHead>
             <TableRow>
               <TableCell><strong>ФИО</strong></TableCell>
-              <TableCell><strong>Email</strong></TableCell>
               <TableCell><strong>Телефон</strong></TableCell>
+              <TableCell><strong>Email</strong></TableCell>
               <TableCell align="center"><strong>Действия</strong></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredPatients.map((patient) => (
-              <TableRow key={patient.id}>
-                <TableCell>{patient.fullName}</TableCell>
-                <TableCell>{patient.email}</TableCell>
-                <TableCell>{patient.phone}</TableCell>
-                <TableCell align="center">
-                  <Button variant="outlined" size="small" sx={{ mr: 1 }}>Карта</Button>
-                  <Button variant="outlined" color="error" size="small">Удалить</Button>
-                </TableCell>
+            {filteredPatients.length > 0 ? (
+              filteredPatients.map((patient) => (
+                <TableRow key={patient.id}>
+                  <TableCell>{patient.full_name}</TableCell>
+                  <TableCell>{patient.User?.phone || '—'}</TableCell>
+                  <TableCell>{patient.User?.email || '—'}</TableCell>
+                  <TableCell align="center">
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      sx={{ mr: 1 }}
+                      onClick={() => window.location.href = `/doctor/patient/${patient.id}`}
+                    >
+                      Карта
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      color="error"
+                      size="small"
+                      onClick={() => handleDelete(patient.id)}
+                    >
+                      Удалить
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={4} align="center">Пациенты не найдены</TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </TableContainer>

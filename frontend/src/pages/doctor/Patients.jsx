@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Typography, Paper, TextField, Table, TableBody, TableCell,
-  TableContainer, TableHead, TableRow, Button, Chip
+  TableContainer, TableHead, TableRow, Button
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import PageLayout from '../../components/PageLayout';
@@ -19,7 +19,7 @@ const DoctorPatients = () => {
   const fetchPatients = async () => {
     try {
       const res = await api.get('/patients');
-      setPatients(res.data);
+      setPatients(res.data || []);
     } catch (error) {
       console.error(error);
     }
@@ -39,7 +39,6 @@ const DoctorPatients = () => {
 
       <TextField
         label="Поиск по ФИО, телефону или email"
-        variant="outlined"
         fullWidth
         sx={{ mb: 3 }}
         value={search}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Typography, Paper, Grid, Button, TextField, MenuItem, Alert, Box
 } from '@mui/material';
@@ -6,11 +7,14 @@ import PageLayout from '../../components/PageLayout';
 import api from '../../api';
 
 const BookAppointment = () => {
+  const [searchParams] = useSearchParams();
+  const preselectedServiceId = searchParams.get('serviceId');
+
   const [doctors, setDoctors] = useState([]);
   const [services, setServices] = useState([]);
   const [formData, setFormData] = useState({
     doctor_id: '',
-    service_id: '',
+    service_id: preselectedServiceId || '',
     appointment_date: '',
     appointment_time: '',
     notes: ''
@@ -29,8 +33,8 @@ const BookAppointment = () => {
         api.get('/doctors'),
         api.get('/services')
       ]);
-      setDoctors(doctorsRes.data);
-      setServices(servicesRes.data);
+      setDoctors(doctorsRes.data || []);
+      setServices(servicesRes.data || []);
     } catch (err) {
       setError('Не удалось загрузить данные');
     }
@@ -49,12 +53,11 @@ const BookAppointment = () => {
     try {
       await api.post('/appointments', {
         doctor_id: formData.doctor_id,
-        service_ids: [formData.service_id],
+        service_ids: formData.service_id ? [formData.service_id] : [],
         appointment_date: formData.appointment_date,
         appointment_time: formData.appointment_time,
         notes: formData.notes
       });
-
       setSuccess('Запись успешно создана!');
       setFormData({
         doctor_id: '', service_id: '', appointment_date: '', appointment_time: '', notes: ''
@@ -80,7 +83,7 @@ const BookAppointment = () => {
           <TextField
             select
             name="doctor_id"
-            label="Выберите врача"
+            label="Врач"
             fullWidth
             margin="normal"
             value={formData.doctor_id}
@@ -97,7 +100,7 @@ const BookAppointment = () => {
           <TextField
             select
             name="service_id"
-            label="Выберите услугу"
+            label="Услуга"
             fullWidth
             margin="normal"
             value={formData.service_id}
@@ -111,50 +114,12 @@ const BookAppointment = () => {
             ))}
           </TextField>
 
-          <TextField
-            name="appointment_date"
-            label="Дата приёма"
-            type="date"
-            fullWidth
-            margin="normal"
-            value={formData.appointment_date}
-            onChange={handleChange}
-            required
-            InputLabelProps={{ shrink: true }}
-          />
+          <TextField name="appointment_date" label="Дата" type="date" fullWidth margin="normal" value={formData.appointment_date} onChange={handleChange} required InputLabelProps={{ shrink: true }} />
+          <TextField name="appointment_time" label="Время" type="time" fullWidth margin="normal" value={formData.appointment_time} onChange={handleChange} required InputLabelProps={{ shrink: true }} />
+          <TextField name="notes" label="Примечание" fullWidth margin="normal" multiline rows={3} value={formData.notes} onChange={handleChange} />
 
-          <TextField
-            name="appointment_time"
-            label="Время приёма"
-            type="time"
-            fullWidth
-            margin="normal"
-            value={formData.appointment_time}
-            onChange={handleChange}
-            required
-            InputLabelProps={{ shrink: true }}
-          />
-
-          <TextField
-            name="notes"
-            label="Дополнительные пожелания"
-            fullWidth
-            margin="normal"
-            multiline
-            rows={3}
-            value={formData.notes}
-            onChange={handleChange}
-          />
-
-          <Button
-            type="submit"
-            variant="contained"
-            size="large"
-            fullWidth
-            sx={{ mt: 3, py: 1.5 }}
-            disabled={loading}
-          >
-            {loading ? 'Запись...' : 'Записаться на приём'}
+          <Button type="submit" variant="contained" size="large" fullWidth sx={{ mt: 3, py: 1.5 }} disabled={loading}>
+            {loading ? 'Запись...' : 'Записаться'}
           </Button>
         </Box>
       </Paper>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Typography, Paper, Grid, Card, CardContent, TextField, Table, TableBody, TableCell,
-  TableContainer, TableHead, TableRow, Button
+  Typography, Paper, Grid, Table, TableBody, TableCell,
+  TableContainer, TableHead, TableRow, TextField
 } from '@mui/material';
 import PageLayout from '../../components/PageLayout';
 import api from '../../api';
@@ -26,7 +26,7 @@ const DoctorDashboard = () => {
       const todayApps = appointmentsRes.data.filter(app => app.appointment_date === today);
 
       setTodayAppointments(todayApps);
-      setPatients(patientsRes.data);
+      setPatients(patientsRes.data || []);
     } catch (error) {
       console.error(error);
     }
@@ -44,7 +44,6 @@ const DoctorDashboard = () => {
       </Typography>
 
       <Grid container spacing={3}>
-        {/* Записи на сегодня */}
         <Grid item xs={12} md={7}>
           <Paper elevation={4} sx={{ p: 3, borderRadius: 3 }}>
             <Typography variant="h6" gutterBottom>Записи на сегодня</Typography>
@@ -75,7 +74,6 @@ const DoctorDashboard = () => {
           </Paper>
         </Grid>
 
-        {/* Пациенты */}
         <Grid item xs={12} md={5}>
           <Paper elevation={4} sx={{ p: 3, borderRadius: 3 }}>
             <Typography variant="h6" gutterBottom>Мои пациенты</Typography>
@@ -99,7 +97,7 @@ const DoctorDashboard = () => {
                   {filteredPatients.slice(0, 10).map((patient) => (
                     <TableRow key={patient.id} hover>
                       <TableCell>{patient.full_name}</TableCell>
-                      <TableCell>{patient.User?.phone}</TableCell>
+                      <TableCell>{patient.User?.phone || '—'}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
