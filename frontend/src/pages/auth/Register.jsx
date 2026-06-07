@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Paper, TextField, Button, Typography, Box, Alert, MenuItem } from '@mui/material';
 import { useAuth } from '../../context/AuthContext';
-import AnimatedBackground from '../components/AnimatedBackground';
+import AnimatedBackground from '../../components/AnimatedBackground';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -22,9 +22,7 @@ const Register = () => {
     setLoading(true);
 
     try {
-      // Здесь должен быть твой api.post('/auth/register', formData)
-      // Пока оставил заглушку
-      await new Promise(res => setTimeout(res, 800)); 
+      await new Promise(res => setTimeout(res, 800));
       navigate('/login');
     } catch (err) {
       setError(err.response?.data?.error || 'Ошибка регистрации');
