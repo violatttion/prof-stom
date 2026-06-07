@@ -23,9 +23,9 @@ const MouseTrail = () => {
         return;
       }
 
-      // Основной луч
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
-      ctx.lineWidth = 4.5;
+      // Основной широкий луч
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)';
+      ctx.lineWidth = 7;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
 
@@ -36,9 +36,9 @@ const MouseTrail = () => {
       }
       ctx.stroke();
 
-      // Лёгкое свечение
-      ctx.strokeStyle = 'rgba(200, 230, 255, 0.35)';
-      ctx.lineWidth = 11;
+      // Свечение вокруг луча
+      ctx.strokeStyle = 'rgba(200, 230, 255, 0.4)';
+      ctx.lineWidth = 16;
       ctx.beginPath();
       ctx.moveTo(trail[0].x, trail[0].y);
       for (let i = 1; i < trail.length; i++) {

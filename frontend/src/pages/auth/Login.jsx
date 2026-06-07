@@ -31,7 +31,13 @@ const Login = () => {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+    <Box sx={{ 
+      minHeight: '100vh', 
+      width: '100%', 
+      position: 'relative', 
+      overflow: 'hidden',
+      background: '#e8f4fd'   // fallback цвет
+    }}>
       <AnimatedBackground />
       <MouseTrail />
 
