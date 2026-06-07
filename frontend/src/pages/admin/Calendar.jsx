@@ -29,7 +29,6 @@ const AdminCalendar = () => {
     }
   };
 
-  // Изменение статуса
   const handleStatusChange = async (id, newStatus) => {
     try {
       await api.patch(`/appointments/${id}/status`, { status: newStatus });
@@ -40,7 +39,6 @@ const AdminCalendar = () => {
     }
   };
 
-  // Открыть диалог переноса
   const openRescheduleDialog = (appointment) => {
     setSelectedAppointment(appointment);
     setNewDate(appointment.appointment_date);
@@ -48,7 +46,6 @@ const AdminCalendar = () => {
     setOpenDialog(true);
   };
 
-  // Перенос записи
   const handleReschedule = async () => {
     if (!selectedAppointment || !newDate || !newTime) return;
 
@@ -100,9 +97,11 @@ const AdminCalendar = () => {
                 <TableRow key={app.id}>
                   <TableCell>{app.appointment_date}</TableCell>
                   <TableCell>{app.appointment_time}</TableCell>
-                  <TableCell>{app.Patient?.User?.full_name}</TableCell>
-                  <TableCell>{app.Doctor?.User?.full_name}</TableCell>
-                  <TableCell>{app.Service?.name}</TableCell>
+                  <TableCell>{app.Patient?.User?.full_name || '—'}</TableCell>
+                  <TableCell>{app.Doctor?.User?.full_name || '—'}</TableCell>
+                  <TableCell>
+                    {app.Services?.[0]?.name || app.Service?.name || '—'}
+                  </TableCell>
                   <TableCell align="center">
                     <Chip label={app.status} color={getStatusColor(app.status)} size="small" />
                   </TableCell>
