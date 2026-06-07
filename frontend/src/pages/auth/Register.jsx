@@ -3,10 +3,15 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Paper, TextField, Button, Typography, Box, Alert, MenuItem } from '@mui/material';
 import AnimatedBackground from '../../components/AnimatedBackground';
 import MouseTrail from '../../components/MouseTrail';
+import api from '../../api'; // ← важно
 
 const Register = () => {
   const [formData, setFormData] = useState({
-    email: '', password: '', fullName: '', phone: '', role: 'patient'
+    email: '',
+    password: '',
+    fullName: '',
+    phone: '',
+    role: 'patient'
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -22,10 +27,18 @@ const Register = () => {
     setLoading(true);
 
     try {
-      await new Promise(res => setTimeout(res, 800));
+      const res = await api.post('/auth/register', {
+        email: formData.email,
+        password: formData.password,
+        fullName: formData.fullName,
+        phone: formData.phone,
+        role: formData.role
+      });
+
+      // Если регистрация прошла успешно — редиректим на логин
       navigate('/login');
     } catch (err) {
-      setError(err.response?.data?.error || 'Ошибка регистрации');
+      setError(err.response?.data?.error || 'Ошибка при регистрации');
     } finally {
       setLoading(false);
     }
@@ -52,10 +65,39 @@ const Register = () => {
           {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
 
           <Box component="form" onSubmit={handleSubmit}>
-            <TextField name="fullName" label="ФИО" fullWidth margin="normal" required onChange={handleChange} />
-            <TextField name="email" label="Email" type="email" fullWidth margin="normal" required onChange={handleChange} />
-            <TextField name="phone" label="Телефон" fullWidth margin="normal" onChange={handleChange} />
-            <TextField name="password" label="Пароль" type="password" fullWidth margin="normal" required onChange={handleChange} />
+            <TextField 
+              name="fullName" 
+              label="ФИО" 
+              fullWidth 
+              margin="normal" 
+              required 
+              onChange={handleChange} 
+            />
+            <TextField 
+              name="email" 
+              label="Email" 
+              type="email" 
+              fullWidth 
+              margin="normal" 
+              required 
+              onChange={handleChange} 
+            />
+            <TextField 
+              name="phone" 
+              label="Телефон" 
+              fullWidth 
+              margin="normal" 
+              onChange={handleChange} 
+            />
+            <TextField 
+              name="password" 
+              label="Пароль" 
+              type="password" 
+              fullWidth 
+              margin="normal" 
+              required 
+              onChange={handleChange} 
+            />
 
             <TextField
               select
