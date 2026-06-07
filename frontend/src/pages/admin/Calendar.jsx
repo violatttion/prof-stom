@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
   Typography, Paper, Table, TableBody, TableCell, TableContainer,
-  TableHead, TableRow, Button, Alert, Box, Chip
+  TableHead, TableRow, Button, Alert, Chip, TextField, Dialog,
+  DialogTitle, DialogContent, DialogActions
 } from '@mui/material';
 import PageLayout from '../../components/PageLayout';
 import api from '../../api';
@@ -10,6 +11,10 @@ const AdminCalendar = () => {
   const [appointments, setAppointments] = useState([]);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [newDate, setNewDate] = useState('');
+  const [newTime, setNewTime] = useState('');
+  const [openDialog, setOpenDialog] = useState(false);
 
   useEffect(() => {
     fetchAppointments();
@@ -24,37 +29,36 @@ const AdminCalendar = () => {
     }
   };
 
-  // Изменение статуса записи
+  // Изменение статуса
   const handleStatusChange = async (id, newStatus) => {
     try {
       await api.patch(`/appointments/${id}/status`, { status: newStatus });
       setSuccess(`Статус изменён на "${newStatus}"`);
-      setError('');
       fetchAppointments();
     } catch (err) {
       setError(err.response?.data?.error || 'Ошибка при изменении статуса');
     }
   };
 
-  // Перетаскивание записи
-  const handleDragStart = (e, appointmentId) => {
-    e.dataTransfer.setData('appointmentId', appointmentId);
-    setError('');
-    setSuccess('');
+  // Открыть диалог переноса
+  const openRescheduleDialog = (appointment) => {
+    setSelectedAppointment(appointment);
+    setNewDate(appointment.appointment_date);
+    setNewTime(appointment.appointment_time);
+    setOpenDialog(true);
   };
 
-  const handleDragOver = (e) => e.preventDefault();
-
-  const handleDrop = async (e, newDate, newTime) => {
-    e.preventDefault();
-    const appointmentId = e.dataTransfer.getData('appointmentId');
+  // Перенос записи
+  const handleReschedule = async () => {
+    if (!selectedAppointment || !newDate || !newTime) return;
 
     try {
-      await api.put(`/appointments/${appointmentId}/reschedule`, {
+      await api.put(`/appointments/${selectedAppointment.id}/reschedule`, {
         newDate,
         newTime
       });
       setSuccess('Запись успешно перенесена');
+      setOpenDialog(false);
       fetchAppointments();
     } catch (err) {
       setError(err.response?.data?.error || 'Ошибка при переносе');
@@ -93,14 +97,7 @@ const AdminCalendar = () => {
           <TableBody>
             {appointments.length > 0 ? (
               appointments.map((app) => (
-                <TableRow
-                  key={app.id}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, app.id)}
-                  onDragOver={handleDragOver}
-                  onDrop={(e) => handleDrop(e, '2026-06-10', '15:00')}
-                  sx={{ cursor: 'grab' }}
-                >
+                <TableRow key={app.id}>
                   <TableCell>{app.appointment_date}</TableCell>
                   <TableCell>{app.appointment_time}</TableCell>
                   <TableCell>{app.Patient?.User?.full_name}</TableCell>
@@ -110,12 +107,19 @@ const AdminCalendar = () => {
                     <Chip label={app.status} color={getStatusColor(app.status)} size="small" />
                   </TableCell>
                   <TableCell align="center">
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      sx={{ mr: 1 }}
+                      onClick={() => openRescheduleDialog(app)}
+                    >
+                      Перенести
+                    </Button>
                     {app.status === 'pending' && (
                       <Button
                         variant="contained"
                         color="success"
                         size="small"
-                        sx={{ mr: 1 }}
                         onClick={() => handleStatusChange(app.id, 'confirmed')}
                       >
                         Подтвердить
@@ -126,6 +130,7 @@ const AdminCalendar = () => {
                         variant="outlined"
                         color="error"
                         size="small"
+                        sx={{ ml: 1 }}
                         onClick={() => handleStatusChange(app.id, 'cancelled')}
                       >
                         Отменить
@@ -142,6 +147,37 @@ const AdminCalendar = () => {
           </TableBody>
         </Table>
       </TableContainer>
+
+      {/* Диалог переноса записи */}
+      <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+        <DialogTitle>Перенести запись</DialogTitle>
+        <DialogContent>
+          <TextField
+            label="Новая дата"
+            type="date"
+            fullWidth
+            margin="normal"
+            value={newDate}
+            onChange={(e) => setNewDate(e.target.value)}
+            InputLabelProps={{ shrink: true }}
+          />
+          <TextField
+            label="Новое время"
+            type="time"
+            fullWidth
+            margin="normal"
+            value={newTime}
+            onChange={(e) => setNewTime(e.target.value)}
+            InputLabelProps={{ shrink: true }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenDialog(false)}>Отмена</Button>
+          <Button variant="contained" onClick={handleReschedule}>
+            Перенести
+          </Button>
+        </DialogActions>
+      </Dialog>
     </PageLayout>
   );
 };
