@@ -33,9 +33,12 @@ const Login = () => {
   return (
     <Box sx={{ 
       minHeight: '100vh', 
-      width: '100%',           // ← исправлено (было 100vw)
+      width: '100%', 
       overflow: 'hidden',
-      position: 'relative'
+      position: 'relative',
+      margin: 0,
+      padding: 0,
+      boxSizing: 'border-box'
     }}>
       <AnimatedBackground />
       <MouseTrail />
