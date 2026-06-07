@@ -9,21 +9,30 @@ import PageLayout from '../../components/PageLayout';
 import api from '../../api';
 import jsPDF from 'jspdf';
 
-// Простая транслитерация (чтобы не было кракозябр в PDF)
+// Транслитерация русского текста для PDF
 const translit = (text) => {
   if (!text) return '';
   const map = {
     'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'e','ж':'zh','з':'z','и':'i',
     'й':'y','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r','с':'s','т':'t',
     'у':'u','ф':'f','х':'h','ц':'ts','ч':'ch','ш':'sh','щ':'sch','ъ':'','ы':'y','ь':'',
-    'э':'e','ю':'yu','я':'ya'
+    'э':'e','ю':'yu','я':'ya','А':'A','Б':'B','В':'V','Г':'G','Д':'D','Е':'E','Ё':'E',
+    'Ж':'Zh','З':'Z','И':'I','Й':'Y','К':'K','Л':'L','М':'M','Н':'N','О':'O','П':'P',
+    'Р':'R','С':'S','Т':'T','У':'U','Ф':'F','Х':'H','Ц':'Ts','Ч':'Ch','Ш':'Sh','Щ':'Sch',
+    'Э':'E','Ю':'Yu','Я':'Ya'
   };
-  return text.toLowerCase().split('').map(char => map[char] || char).join('');
+  return text.split('').map(char => map[char] || char).join('');
 };
 
-const statusLabels = {
-  healthy: 'Здоров', caries: 'Кариес', filling: 'Пломба',
-  extracted: 'Удалён', implant: 'Имплант', crown: 'Коронка', root_canal: 'Лечение каналов'
+// Статусы на английском для PDF (чтобы не было кракозябр)
+const pdfStatusLabels = {
+  healthy: 'Healthy',
+  caries: 'Caries',
+  filling: 'Filling',
+  extracted: 'Extracted',
+  implant: 'Implant',
+  crown: 'Crown',
+  root_canal: 'Root Canal Treatment'
 };
 
 const PatientCard = () => {
@@ -111,7 +120,7 @@ const PatientCard = () => {
     }
   };
 
-  // ==================== КРАСИВЫЙ PDF БЕЗ КРАКОЗЯБР ====================
+  // ==================== КРАСИВЫЙ И ЧИСТЫЙ PDF ====================
   const exportToPDF = () => {
     if (!patient) return;
 
@@ -130,14 +139,14 @@ const PatientCard = () => {
     doc.setFont("helvetica", "normal");
     doc.text(`Generated: ${new Date().toLocaleDateString('ru-RU')}`, 105, 25, { align: 'center' });
 
-    // Информация о пациенте
+    // Информация о пациенте (с транслитом)
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
     doc.text("Patient Information", 20, 38);
 
     doc.setFontSize(11);
     doc.setFont("helvetica", "normal");
-    doc.text(`Full Name: ${fullName}`, 20, 46);
+    doc.text(`Full Name: ${translit(fullName)}`, 20, 46);
     doc.text(`Phone: ${phone}`, 20, 52);
     doc.text(`Email: ${email}`, 20, 58);
 
@@ -152,7 +161,7 @@ const PatientCard = () => {
 
     if (appointments.length > 0) {
       appointments.forEach((app, index) => {
-        const service = app.Service?.name || app.Services?.[0]?.name || '—';
+        const service = translit(app.Service?.name || app.Services?.[0]?.name || '—');
         doc.text(`${index + 1}. ${app.appointment_date}  |  ${app.appointment_time}  |  ${service}  |  ${app.status}`, 20, y);
         y += 6;
       });
@@ -160,7 +169,7 @@ const PatientCard = () => {
       doc.text("No appointments found.", 20, y);
     }
 
-    // Зубная формула (только не здоровые зубы)
+    // Зубная формула (только проблемные зубы, статусы на английском)
     y += 10;
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
@@ -171,16 +180,19 @@ const PatientCard = () => {
     doc.setFont("helvetica", "normal");
 
     const problemTeeth = teeth.filter(t => t.status && t.status !== 'healthy');
+
     if (problemTeeth.length > 0) {
-      problemTeeth.forEach((tooth, index) => {
-        doc.text(`Tooth #${tooth.tooth_number}: ${statusLabels[tooth.status] || tooth.status} ${tooth.comment ? '- ' + tooth.comment : ''}`, 20, y);
+      problemTeeth.forEach((tooth) => {
+        const statusEn = pdfStatusLabels[tooth.status] || tooth.status;
+        const commentText = tooth.comment ? ` - ${translit(tooth.comment)}` : '';
+        doc.text(`Tooth #${tooth.tooth_number}: ${statusEn}${commentText}`, 20, y);
         y += 6;
       });
     } else {
       doc.text("All teeth are marked as healthy or no data available.", 20, y);
     }
 
-    // Сохраняем файл по ФИО пациента
+    // Сохраняем файл по ФИО
     const safeFileName = translit(fullName).replace(/\s+/g, '_') || 'patient_card';
     doc.save(`Patient_Card_${safeFileName}.pdf`);
   };
@@ -256,7 +268,7 @@ const PatientCard = () => {
                 >
                   {num}
                   {tooth.status && tooth.status !== 'healthy' && (
-                    <Chip label={statusLabels[tooth.status]} color="primary" size="small" sx={{ ml: 0.5, fontSize: '0.6rem' }} />
+                    <Chip label={tooth.status} color="primary" size="small" sx={{ ml: 0.5, fontSize: '0.6rem' }} />
                   )}
                 </Button>
               </Grid>
@@ -265,11 +277,19 @@ const PatientCard = () => {
         </Grid>
       </Paper>
 
-      {/* Модалка */}
+      {/* Модалка редактирования зуба */}
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Зуб №{selectedTooth?.tooth_number}</DialogTitle>
         <DialogContent>
-          <TextField select label="Состояние" fullWidth margin="normal" value={status} onChange={(e) => setStatus(e.target.value)} SelectProps={{ native: true }}>
+          <TextField
+            select
+            label="Состояние"
+            fullWidth
+            margin="normal"
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            SelectProps={{ native: true }}
+          >
             <option value="healthy">Здоров</option>
             <option value="caries">Кариес</option>
             <option value="filling">Пломба</option>
