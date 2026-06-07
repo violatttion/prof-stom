@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 
 const AnimatedBackground = () => {
   const canvasRef = useRef(null);
-  const mouseRef = useRef({ x: 0, y: 0, active: false });
+  const mouseTrailRef = useRef([]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -14,27 +14,27 @@ const AnimatedBackground = () => {
     canvas.height = height;
 
     const rays = [];
-    const rayCount = 16;
-
-    for (let i = 0; i < rayCount; i++) {
+    for (let i = 0; i < 18; i++) {
       rays.push({
         x: Math.random() * width,
-        y: Math.random() * height * 0.6,
-        length: 220 + Math.random() * 380,
-        width: 22 + Math.random() * 42,
-        speed: 0.6 + Math.random() * 1.1,
-        angle: 125 + (Math.random() - 0.5) * 18,
-        opacity: 0.45 + Math.random() * 0.35,
-        hue: 200 + Math.random() * 40,
+        y: Math.random() * height * 0.7,
+        length: 250 + Math.random() * 420,
+        width: 26 + Math.random() * 38,
+        speed: 0.7 + Math.random() * 1.3,
+        angle: 122 + (Math.random() - 0.5) * 16,
+        hue: 195 + Math.random() * 45,
+        opacity: 0.55 + Math.random() * 0.3,
       });
     }
 
     const draw = () => {
-      ctx.clearRect(0, 0, width, height);
+      // Создаём эффект затухания (вместо clearRect)
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
+      ctx.fillRect(0, 0, width, height);
 
-      // Рисуем лучи
+      // Рисуем неоновые лучи
       rays.forEach((ray) => {
-        const progress = Date.now() * ray.speed * 0.03;
+        const progress = Date.now() * ray.speed * 0.028;
         const x = ray.x + Math.cos((ray.angle * Math.PI) / 180) * progress;
         const y = ray.y + Math.sin((ray.angle * Math.PI) / 180) * progress;
 
@@ -42,11 +42,10 @@ const AnimatedBackground = () => {
         ctx.translate(x, y);
         ctx.rotate((ray.angle * Math.PI) / 180);
 
-        // Неоновый градиент
         const gradient = ctx.createLinearGradient(-ray.length / 2, 0, ray.length / 2, 0);
-        gradient.addColorStop(0, `hsla(${ray.hue}, 100%, 65%, ${ray.opacity * 0.6})`);
-        gradient.addColorStop(0.5, `hsla(${ray.hue}, 100%, 75%, ${ray.opacity})`);
-        gradient.addColorStop(1, `hsla(${ray.hue}, 100%, 65%, ${ray.opacity * 0.5})`);
+        gradient.addColorStop(0, `hsla(${ray.hue}, 100%, 68%, ${ray.opacity * 0.5})`);
+        gradient.addColorStop(0.5, `hsla(${ray.hue}, 100%, 78%, ${ray.opacity})`);
+        gradient.addColorStop(1, `hsla(${ray.hue}, 100%, 68%, ${ray.opacity * 0.4})`);
 
         ctx.fillStyle = gradient;
         ctx.beginPath();
@@ -55,18 +54,23 @@ const AnimatedBackground = () => {
         ctx.restore();
       });
 
-      // Эффект осветления от курсора
-      if (mouseRef.current.active) {
+      // Рисуем след от курсора
+      const trail = mouseTrailRef.current;
+      for (let i = 0; i < trail.length; i++) {
+        const point = trail[i];
+        const alpha = (i / trail.length) * 0.45;
+
         const gradient = ctx.createRadialGradient(
-          mouseRef.current.x, mouseRef.current.y, 40,
-          mouseRef.current.x, mouseRef.current.y, 280
+          point.x, point.y, 20,
+          point.x, point.y, 160
         );
-        gradient.addColorStop(0, 'rgba(255,255,255,0.35)');
-        gradient.addColorStop(0.4, 'rgba(200,220,255,0.18)');
-        gradient.addColorStop(1, 'rgba(200,220,255,0)');
+        gradient.addColorStop(0, `rgba(200, 230, 255, ${alpha})`);
+        gradient.addColorStop(1, 'rgba(200, 230, 255, 0)');
 
         ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, width, height);
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, 160, 0, Math.PI * 2);
+        ctx.fill();
       }
 
       requestAnimationFrame(draw);
@@ -75,17 +79,13 @@ const AnimatedBackground = () => {
     draw();
 
     const handleMouseMove = (e) => {
-      mouseRef.current.x = e.clientX;
-      mouseRef.current.y = e.clientY;
-      mouseRef.current.active = true;
-    };
+      mouseTrailRef.current.push({ x: e.clientX, y: e.clientY });
 
-    const handleMouseLeave = () => {
-      mouseRef.current.active = false;
+      // Ограничиваем длину следа
+      if (mouseTrailRef.current.length > 22) {
+        mouseTrailRef.current.shift();
+      }
     };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseleave', handleMouseLeave);
 
     const handleResize = () => {
       width = window.innerWidth;
@@ -94,11 +94,11 @@ const AnimatedBackground = () => {
       canvas.height = height;
     };
 
+    window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('resize', handleResize);
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseleave', handleMouseLeave);
       window.removeEventListener('resize', handleResize);
     };
   }, []);
