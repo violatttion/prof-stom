@@ -1,90 +1,96 @@
-import React, { useEffect, useState } from 'react';
-import { Typography, Paper, List, ListItem, ListItemText, Button, CircularProgress, Alert } from '@mui/material';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import {
+  Typography, Paper, TextField, Table, TableBody, TableCell,
+  TableContainer, TableHead, TableRow, Chip, Button
+} from '@mui/material';
+import PageLayout from '../../components/PageLayout';
 import api from '../../api';
 
-const Patients = () => {
+const DoctorPatients = () => {
   const [patients, setPatients] = useState([]);
+  const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
 
   useEffect(() => {
-    const fetchMyPatients = async () => {
-      try {
-        // Получаем все записи врача
-        const res = await api.get('/appointments');
-
-        // Извлекаем уникальных пациентов
-        const uniquePatients = {};
-
-        res.data.forEach((app) => {
-          if (app.Patient && app.Patient.User) {
-            const patient = app.Patient;
-            if (!uniquePatients[patient.id]) {
-              uniquePatients[patient.id] = {
-                id: patient.id,
-                full_name: patient.User.full_name,
-                phone: patient.User.phone,
-                lastVisit: app.appointment_date,
-              };
-            }
-          }
-        });
-
-        setPatients(Object.values(uniquePatients));
-      } catch (err) {
-        console.error(err);
-        setError('Не удалось загрузить список пациентов');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchMyPatients();
+    fetchPatients();
   }, []);
 
-  if (loading) {
-    return (
-      <Paper sx={{ p: 4, textAlign: 'center' }}>
-        <CircularProgress />
-        <Typography sx={{ mt: 2 }}>Загрузка пациентов...</Typography>
-      </Paper>
-    );
-  }
+  const fetchPatients = async () => {
+    try {
+      const res = await api.get('/patients'); // или /doctors/my-patients
+      setPatients(res.data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredPatients = patients.filter(patient =>
+    patient.full_name?.toLowerCase().includes(search.toLowerCase()) ||
+    patient.User?.phone?.includes(search) ||
+    patient.User?.email?.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
-    <Paper sx={{ p: 3 }}>
-      <Typography variant="h5" gutterBottom>
+    <PageLayout>
+      <Typography variant="h4" gutterBottom sx={{ color: '#0d47a1', fontWeight: 700, mb: 4 }}>
         Мои пациенты
       </Typography>
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      <TextField
+        label="Поиск по имени, телефону или email"
+        variant="outlined"
+        fullWidth
+        sx={{ mb: 3 }}
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
 
-      {patients.length === 0 ? (
-        <Alert severity="info">
-          Пока нет пациентов. Попросите пациентов записаться на приём через личный кабинет.
-        </Alert>
-      ) : (
-        <List>
-          {patients.map((patient) => (
-            <ListItem key={patient.id} divider>
-              <ListItemText
-                primary={patient.full_name}
-                secondary={`Телефон: ${patient.phone || '—'} | Последний визит: ${patient.lastVisit}`}
-              />
-              <Button
-                component={Link}
-                to={`/doctor/patient/${patient.id}`}
-                variant="outlined"
-              >
-                Открыть карту
-              </Button>
-            </ListItem>
-          ))}
-        </List>
-      )}
-    </Paper>
+      <TableContainer component={Paper} elevation={4} sx={{ borderRadius: 3 }}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell><strong>ФИО</strong></TableCell>
+              <TableCell><strong>Телефон</strong></TableCell>
+              <TableCell><strong>Email</strong></TableCell>
+              <TableCell align="center"><strong>Последняя запись</strong></TableCell>
+              <TableCell align="center"><strong>Действия</strong></TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {filteredPatients.length > 0 ? (
+              filteredPatients.map((patient) => (
+                <TableRow key={patient.id} hover>
+                  <TableCell>{patient.full_name}</TableCell>
+                  <TableCell>{patient.User?.phone || '—'}</TableCell>
+                  <TableCell>{patient.User?.email || '—'}</TableCell>
+                  <TableCell align="center">
+                    {patient.last_appointment_date || '—'}
+                  </TableCell>
+                  <TableCell align="center">
+                    <Button 
+                      variant="outlined" 
+                      size="small"
+                      onClick={() => window.location.href = `/doctor/patient/${patient.id}`}
+                    >
+                      Открыть карту
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={5} align="center">
+                  Пациенты не найдены
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </PageLayout>
   );
 };
 
-export default Patients;
+export default DoctorPatients;
