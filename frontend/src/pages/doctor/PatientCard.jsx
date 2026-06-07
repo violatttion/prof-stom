@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   Typography, Paper, Grid, Button, Table, TableBody, TableCell,
   TableContainer, TableHead, TableRow, Alert, TextField, Chip,
-  Dialog, DialogTitle, DialogContent, DialogActions, Box, Select, MenuItem
+  Dialog, DialogTitle, DialogContent, DialogActions, Box
 } from '@mui/material';
 import PageLayout from '../../components/PageLayout';
 import api from '../../api';
@@ -108,16 +108,72 @@ const PatientCard = () => {
     }
   };
 
+  // ==================== УЛУЧШЕННЫЙ ЭКСПОРТ В PDF ====================
   const exportToPDF = () => {
     if (!patient) return;
-    const fullName = patient.User?.full_name || patient.full_name || 'Пациент';
-    const doc = new jsPDF();
-    doc.setFontSize(16);
-    doc.text('Карта пациента', 105, 20, { align: 'center' });
-    doc.setFontSize(12);
-    doc.text(`ФИО: ${fullName}`, 20, 40);
-    // ... остальной код экспорта (как в предыдущей версии)
-    doc.save(`patient_${fullName}.pdf`);
+
+    const fullName = patient.User?.full_name || patient.full_name || 'Patient';
+    const phone = patient.User?.phone || patient.phone || '—';
+    const email = patient.User?.email || patient.email || '—';
+
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    // Заголовок
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text("PATIENT CARD", 105, 20, { align: 'center' });
+
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 105, 27, { align: 'center' });
+
+    // Блок с данными пациента
+    doc.setFontSize(13);
+    doc.setFont("helvetica", "bold");
+    doc.text("Patient Information", 20, 42);
+
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Full Name: ${fullName}`, 20, 50);
+    doc.text(`Phone: ${phone}`, 20, 57);
+    doc.text(`Email: ${email}`, 20, 64);
+
+    // История посещений
+    doc.setFontSize(13);
+    doc.setFont("helvetica", "bold");
+    doc.text("Appointment History", 20, 78);
+
+    let y = 86;
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+
+    if (appointments.length > 0) {
+      appointments.forEach((app, index) => {
+        const serviceName = app.Service?.name || app.Services?.[0]?.name || '—';
+        const line = `${index + 1}. ${app.appointment_date}  |  ${app.appointment_time}  |  ${serviceName}  |  ${app.status}`;
+        doc.text(line, 20, y);
+        y += 7;
+      });
+    } else {
+      doc.text("No appointments found.", 20, y);
+    }
+
+    // Примечание про зубную формулу
+    y += 10;
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.text("Note:", 20, y);
+    y += 6;
+    doc.setFont("helvetica", "normal");
+    doc.text("Dental formula and treatment details are available in the web interface.", 20, y);
+
+    // Сохраняем файл
+    const safeName = fullName.replace(/[^a-zA-Z0-9]/g, '_');
+    doc.save(`Patient_Card_${safeName}.pdf`);
   };
 
   if (error) return <PageLayout><Alert severity="error">{error}</Alert></PageLayout>;
@@ -131,7 +187,7 @@ const PatientCard = () => {
 
       {success && <Alert severity="success" sx={{ mb: 3 }} onClose={() => setSuccess('')}>{success}</Alert>}
 
-      {/* Общая информация пациента */}
+      {/* Общая информация */}
       <Paper elevation={4} sx={{ p: 4, borderRadius: 3, mb: 4 }}>
         <Grid container spacing={2}>
           <Grid item xs={12} md={8}>
@@ -140,12 +196,14 @@ const PatientCard = () => {
             <Typography><strong>Email:</strong> {patient.User?.email || patient.email || '—'}</Typography>
           </Grid>
           <Grid item xs={12} md={4} sx={{ textAlign: { md: 'right' } }}>
-            <Button variant="contained" onClick={exportToPDF}>Экспорт в PDF</Button>
+            <Button variant="contained" onClick={exportToPDF}>
+              Экспорт в PDF
+            </Button>
           </Grid>
         </Grid>
       </Paper>
 
-      {/* История приёмов (отсортирована по дате — новые сверху) */}
+      {/* История приёмов */}
       <Typography variant="h6" gutterBottom>История приёмов</Typography>
       <TableContainer component={Paper} elevation={4} sx={{ borderRadius: 3, mb: 4 }}>
         <Table>
@@ -155,7 +213,7 @@ const PatientCard = () => {
               <TableCell><strong>Время</strong></TableCell>
               <TableCell><strong>Услуга</strong></TableCell>
               <TableCell><strong>Статус</strong></TableCell>
-              <TableCell align="center"><strong>Действия</strong></TableCell>
+              <TableCell align="center"><strong>Зубная формула</strong></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -171,7 +229,7 @@ const PatientCard = () => {
                     size="small"
                     onClick={() => handleSelectAppointment(app.id)}
                   >
-                    Зубная формула этого приёма
+                    Открыть формулу
                   </Button>
                 </TableCell>
               </TableRow>
@@ -206,7 +264,6 @@ const PatientCard = () => {
                     minHeight: 58,
                     fontWeight: 600,
                     borderColor: tooth.status !== 'healthy' ? '#1565c0' : undefined,
-                    color: tooth.status !== 'healthy' ? '#0d47a1' : undefined
                   }}
                 >
                   {num}
@@ -223,9 +280,6 @@ const PatientCard = () => {
             );
           })}
         </Grid>
-        <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: 'block' }}>
-          Кликните на любой зуб, чтобы изменить его статус. Формула сохраняется для выбранного приёма.
-        </Typography>
       </Paper>
 
       {/* Модалка редактирования зуба */}
