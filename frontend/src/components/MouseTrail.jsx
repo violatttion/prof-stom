@@ -18,21 +18,21 @@ const MouseTrail = () => {
 
       const trail = trailRef.current;
 
-      for (let i = 0; i < trail.length; i++) {
-        const point = trail[i];
-        const alpha = (i / trail.length) * 0.5;
+      for (let i = 0; i < trail.length - 1; i++) {
+        const current = trail[i];
+        const next = trail[i + 1];
 
-        const gradient = ctx.createRadialGradient(
-          point.x, point.y, 15,
-          point.x, point.y, 120
-        );
-        gradient.addColorStop(0, `rgba(255, 255, 255, ${alpha})`);
-        gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        const alpha = (i / trail.length) * 0.7;
 
-        ctx.fillStyle = gradient;
+        // Рисуем тонкий луч между двумя точками
+        ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+        ctx.lineWidth = 3.5;
+        ctx.lineCap = 'round';
+
         ctx.beginPath();
-        ctx.arc(point.x, point.y, 120, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.moveTo(current.x, current.y);
+        ctx.lineTo(next.x, next.y);
+        ctx.stroke();
       }
 
       requestAnimationFrame(draw);
@@ -43,7 +43,8 @@ const MouseTrail = () => {
     const handleMouseMove = (e) => {
       trailRef.current.push({ x: e.clientX, y: e.clientY });
 
-      if (trailRef.current.length > 18) {
+      // Делаем след короче
+      if (trailRef.current.length > 12) {
         trailRef.current.shift();
       }
     };
