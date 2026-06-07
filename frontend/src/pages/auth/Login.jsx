@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Paper, TextField, Button, Typography, Box, Alert } from '@mui/material';
 import { useAuth } from '../../context/AuthContext';
-import AnimatedBackground from '../../components/AnimatedBackground';
-import MouseTrail from '../../components/MouseTrail';
+import PageLayout from '../../components/PageLayout';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -31,26 +30,9 @@ const Login = () => {
   };
 
   return (
-    <Box sx={{ 
-      minHeight: '100vh', 
-      width: '100%', 
-      overflow: 'hidden',
-      position: 'relative',
-      margin: 0,
-      padding: 0
-    }}>
-      <AnimatedBackground />
-      <MouseTrail />
-
-      <Box sx={{ 
-        minHeight: '100vh', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        position: 'relative',
-        zIndex: 2 
-      }}>
-        <Paper elevation={12} sx={{ p: 5, borderRadius: 5, maxWidth: 420, width: '100%', mx: 2 }}>
+    <PageLayout maxWidth="xs">
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh' }}>
+        <Paper elevation={12} sx={{ p: 5, borderRadius: 5, maxWidth: 420, width: '100%' }}>
           <Typography variant="h3" align="center" gutterBottom sx={{ color: '#0d47a1', fontWeight: 700 }}>
             ПРОФ СТОМ
           </Typography>
@@ -75,7 +57,7 @@ const Login = () => {
           </Box>
         </Paper>
       </Box>
-    </Box>
+    </PageLayout>
   );
 };
 

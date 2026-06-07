@@ -43,7 +43,6 @@ class AppointmentController {
     try {
       let { patient_id, doctor_id, appointment_date, appointment_time, service_ids = [], notes } = req.body;
 
-      // Если пациент записывается сам — берём его patient_id автоматически
       if (req.user.role === 'patient' && !patient_id) {
         const patient = await Patient.findOne({ where: { user_id: req.user.id } });
         if (patient) patient_id = patient.id;
@@ -53,7 +52,6 @@ class AppointmentController {
         return res.status(400).json({ error: 'Не удалось определить пациента' });
       }
 
-      // Проверка конфликтов
       const existing = await Appointment.findOne({
         where: {
           doctor_id,
@@ -144,6 +142,49 @@ class AppointmentController {
 
       res.json(appointments);
     } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  // === НОВЫЙ МЕТОД: Перенос записи (Drag & Drop) ===
+  async rescheduleAppointment(req, res) {
+    try {
+      const { id } = req.params;
+      const { newDate, newTime } = req.body;
+
+      const appointment = await Appointment.findByPk(id);
+      if (!appointment) {
+        return res.status(404).json({ error: 'Запись не найдена' });
+      }
+
+      // Проверка занятости слота
+      const conflicting = await Appointment.findOne({
+        where: {
+          doctor_id: appointment.doctor_id,
+          appointment_date: newDate,
+          appointment_time: newTime,
+          status: { [Op.notIn]: ['cancelled', 'completed'] },
+          id: { [Op.ne]: id }
+        }
+      });
+
+      if (conflicting) {
+        return res.status(409).json({ error: 'Выбранное время уже занято' });
+      }
+
+      appointment.appointment_date = newDate;
+      appointment.appointment_time = newTime;
+      await appointment.save();
+
+      const io = req.app.get('io');
+      if (io) {
+        io.to(`user_${appointment.patient_id}`).emit('appointment_rescheduled', appointment);
+        io.to(`doctor_${appointment.doctor_id}`).emit('appointment_rescheduled', appointment);
+      }
+
+      res.json({ message: 'Запись успешно перенесена', appointment });
+    } catch (error) {
+      console.error('Ошибка переноса записи:', error);
       res.status(500).json({ error: error.message });
     }
   }
