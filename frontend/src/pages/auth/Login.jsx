@@ -31,34 +31,43 @@ const Login = () => {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+    <Box sx={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
       <AnimatedBackground />
       <MouseTrail />
 
-      <Paper elevation={12} sx={{ p: 5, borderRadius: 5, maxWidth: 420, width: '100%', mx: 2, position: 'relative', zIndex: 2 }}>
-        <Typography variant="h3" align="center" gutterBottom sx={{ color: '#0d47a1', fontWeight: 700 }}>
-          ПРОФ СТОМ
-        </Typography>
-        
-        <Typography variant="subtitle1" align="center" color="text.secondary" gutterBottom sx={{ mb: 4 }}>
-          Информационная система стоматологической клиники
-        </Typography>
-
-        {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
-
-        <Box component="form" onSubmit={handleSubmit}>
-          <TextField margin="normal" required fullWidth label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} sx={{ mb: 2.5 }} />
-          <TextField margin="normal" required fullWidth label="Пароль" type="password" value={password} onChange={(e) => setPassword(e.target.value)} sx={{ mb: 3.5 }} />
-          
-          <Button type="submit" fullWidth variant="contained" size="large" sx={{ py: 1.7, bgcolor: '#1565c0', '&:hover': { bgcolor: '#0d47a1' }, mb: 2.5, borderRadius: 3 }} disabled={loading}>
-            {loading ? 'Вход...' : 'ВОЙТИ В СИСТЕМУ'}
-          </Button>
-
-          <Typography align="center">
-            Нет аккаунта? <Link to="/register" style={{ color: '#1565c0', fontWeight: 600 }}>Зарегистрироваться</Link>
+      <Box sx={{ 
+        minHeight: '100vh', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        position: 'relative',
+        zIndex: 2 
+      }}>
+        <Paper elevation={12} sx={{ p: 5, borderRadius: 5, maxWidth: 420, width: '100%', mx: 2 }}>
+          <Typography variant="h3" align="center" gutterBottom sx={{ color: '#0d47a1', fontWeight: 700 }}>
+            ПРОФ СТОМ
           </Typography>
-        </Box>
-      </Paper>
+          
+          <Typography variant="subtitle1" align="center" color="text.secondary" gutterBottom sx={{ mb: 4 }}>
+            Информационная система стоматологической клиники
+          </Typography>
+
+          {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
+
+          <Box component="form" onSubmit={handleSubmit}>
+            <TextField margin="normal" required fullWidth label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} sx={{ mb: 2.5 }} />
+            <TextField margin="normal" required fullWidth label="Пароль" type="password" value={password} onChange={(e) => setPassword(e.target.value)} sx={{ mb: 3.5 }} />
+            
+            <Button type="submit" fullWidth variant="contained" size="large" sx={{ py: 1.7, bgcolor: '#1565c0', '&:hover': { bgcolor: '#0d47a1' }, mb: 2.5, borderRadius: 3 }} disabled={loading}>
+              {loading ? 'Вход...' : 'ВОЙТИ В СИСТЕМУ'}
+            </Button>
+
+            <Typography align="center">
+              Нет аккаунта? <Link to="/register" style={{ color: '#1565c0', fontWeight: 600 }}>Зарегистрироваться</Link>
+            </Typography>
+          </Box>
+        </Paper>
+      </Box>
     </Box>
   );
 };

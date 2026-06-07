@@ -11,16 +11,20 @@ const AnimatedBackground = () => {
         right: 0,
         bottom: 0,
         backgroundImage: `
-          linear-gradient(125deg, rgba(21, 101, 192, 0.38) 0%, transparent 35%),
-          linear-gradient(140deg, rgba(25, 118, 210, 0.32) 10%, transparent 48%),
-          linear-gradient(115deg, rgba(13, 71, 161, 0.35) 22%, transparent 55%),
-          linear-gradient(135deg, rgba(30, 136, 229, 0.28) 30%, transparent 65%)
+          linear-gradient(120deg, rgba(0, 180, 255, 0.72) 0%, transparent 22%),
+          linear-gradient(42deg, rgba(59, 130, 246, 0.65) 8%, transparent 35%),
+          linear-gradient(195deg, rgba(30, 64, 175, 0.68) 18%, transparent 45%),
+          linear-gradient(305deg, rgba(14, 165, 233, 0.60) 26%, transparent 52%),
+          linear-gradient(155deg, rgba(0, 180, 255, 0.55) 35%, transparent 62%)
         `,
-        backgroundSize: '190% 190%',
-        animation: 'softRaysMove 14s ease-in-out infinite',
-        '@keyframes softRaysMove': {
+        backgroundSize: '150% 150%',
+        animation: 'neonShimmer 8.5s ease-in-out infinite',
+        '@keyframes neonShimmer': {
           '0%': { backgroundPosition: '0% 0%' },
-          '50%': { backgroundPosition: '38% 42%' },
+          '20%': { backgroundPosition: '48% 28%' },
+          '40%': { backgroundPosition: '82% 12%' },
+          '60%': { backgroundPosition: '22% 58%' },
+          '80%': { backgroundPosition: '65% 78%' },
           '100%': { backgroundPosition: '0% 0%' },
         },
         zIndex: 0,
