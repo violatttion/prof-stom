@@ -1,75 +1,41 @@
 const express = require('express');
 const router = express.Router();
-const { Patient, User, Appointment, Doctor, Service } = require('../models');
+const { Patient, User } = require('../models');
 const { authenticateToken, authorizeRoles } = require('../middleware/auth');
 
 router.use(authenticateToken);
 
-// Получить всех пациентов
 router.get('/', async (req, res) => {
   try {
     const patients = await Patient.findAll({
-      include: [{ model: User, attributes: ['full_name', 'email', 'phone'] }],
-      order: [['created_at', 'DESC']]
+      include: [{ model: User, attributes: ['full_name', 'email', 'phone'] }]
     });
     res.json(patients);
   } catch (error) {
-    console.error('Ошибка получения пациентов:', error);
     res.status(500).json({ error: 'Не удалось загрузить пациентов' });
   }
 });
 
-// Получить пациента по ID (упрощённая стабильная версия)
 router.get('/:id', async (req, res) => {
   try {
     const patient = await Patient.findByPk(req.params.id, {
-      include: [
-        { model: User, attributes: ['full_name', 'email', 'phone'] },
-        {
-          model: Appointment,
-          limit: 15,
-          order: [['appointment_date', 'DESC']],
-          include: [
-            { model: Doctor, include: [{ model: User, attributes: ['full_name'] }] },
-            { model: Service }
-          ]
-        }
-      ]
+      include: [{ model: User, attributes: ['full_name', 'email', 'phone'] }]
     });
-
-    if (!patient) {
-      return res.status(404).json({ error: 'Пациент не найден' });
-    }
-
+    if (!patient) return res.status(404).json({ error: 'Пациент не найден' });
     res.json(patient);
   } catch (error) {
-    console.error('Ошибка получения пациента по ID:', error);
-    res.status(500).json({ error: 'Не удалось загрузить данные пациента' });
+    res.status(500).json({ error: 'Не удалось загрузить пациента' });
   }
 });
 
-// Удалить пациента (только админ)
 router.delete('/:id', authorizeRoles('admin'), async (req, res) => {
   try {
-    const patient = await Patient.findByPk(req.params.id, {
-      include: [{ model: User }]
-    });
-
-    if (!patient) {
-      return res.status(404).json({ error: 'Пациент не найден' });
-    }
-
-    await Appointment.destroy({ where: { patient_id: patient.id } });
+    const patient = await Patient.findByPk(req.params.id);
+    if (!patient) return res.status(404).json({ error: 'Пациент не найден' });
     await patient.destroy();
-
-    if (patient.User) {
-      await patient.User.destroy();
-    }
-
-    res.json({ message: 'Пациент успешно удалён' });
+    res.json({ message: 'Пациент удалён' });
   } catch (error) {
-    console.error('Ошибка удаления пациента:', error);
-    res.status(500).json({ error: 'Ошибка при удалении пациента' });
+    res.status(500).json({ error: 'Ошибка удаления' });
   }
 });
 
