@@ -15,7 +15,6 @@ class AppointmentController {
       if (status) where.status = status;
       if (patientId) where.patient_id = patientId;
 
-      // Только врач и пациент видят свои записи. Админ видит всё.
       if (req.user.role === 'doctor') {
         const doctor = await Doctor.findOne({ where: { user_id: req.user.id } });
         if (doctor) where.doctor_id = doctor.id;
@@ -37,8 +36,8 @@ class AppointmentController {
 
       res.json(appointments);
     } catch (error) {
-      console.error('getAll error:', error);
-      res.status(500).json({ error: error.message });
+      console.error('Ошибка getAll appointments:', error);
+      res.status(500).json({ error: 'Не удалось загрузить записи' });
     }
   }
 
@@ -144,7 +143,7 @@ class AppointmentController {
       };
 
       await transporter.sendMail(mailOptions);
-      console.log(`Письмо отправлено пациенту: ${patient.User.email}`);
+      console.log(`Письцо отправлено пациенту: ${patient.User.email}`);
     } catch (error) {
       console.error('Ошибка отправки email:', error);
     }
@@ -183,7 +182,6 @@ class AppointmentController {
   async getMyAppointments(req, res) {
     try {
       let where = {};
-
       if (req.user.role === 'patient') {
         const patient = await Patient.findOne({ where: { user_id: req.user.id } });
         if (patient) where.patient_id = patient.id;
@@ -204,8 +202,8 @@ class AppointmentController {
 
       res.json(appointments);
     } catch (error) {
-      console.error('getMyAppointments error:', error);
-      res.status(500).json({ error: error.message });
+      console.error('Ошибка getMyAppointments:', error);
+      res.status(500).json({ error: 'Не удалось загрузить записи' });
     }
   }
 
