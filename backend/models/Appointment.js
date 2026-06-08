@@ -7,13 +7,11 @@ module.exports = (sequelize, DataTypes) => {
     },
     patient_id: {
       type: DataTypes.INTEGER,
-      allowNull: false,
-      references: { model: 'patients', key: 'id' }
+      allowNull: false
     },
     doctor_id: {
       type: DataTypes.INTEGER,
-      allowNull: false,
-      references: { model: 'doctors', key: 'id' }
+      allowNull: false
     },
     appointment_date: {
       type: DataTypes.DATEONLY,
@@ -24,33 +22,24 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false
     },
     status: {
-      type: DataTypes.ENUM('pending', 'confirmed', 'completed', 'cancelled', 'no_show'),
+      type: DataTypes.ENUM('pending', 'confirmed', 'cancelled', 'reschedule_requested'),
       defaultValue: 'pending'
     },
-    source: {
-      type: DataTypes.ENUM('admin', 'patient', 'doctor'),
-      defaultValue: 'admin'
+    // Поля для запроса на перенос
+    reschedule_date: {
+      type: DataTypes.DATEONLY,
+      allowNull: true
+    },
+    reschedule_time: {
+      type: DataTypes.STRING,
+      allowNull: true
     },
     notes: {
       type: DataTypes.TEXT,
       allowNull: true
-    },
-    cancellation_reason: {
-      type: DataTypes.TEXT,
-      allowNull: true
-    },
-    reminder_sent: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false
-    },
-    created_by: {
-      type: DataTypes.INTEGER,
-      allowNull: true
     }
   }, {
     tableName: 'appointments',
-    timestamps: true,
-    createdAt: 'created_at',
-    updatedAt: 'updated_at'
+    timestamps: true
   });
 };

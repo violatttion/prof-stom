@@ -66,4 +66,16 @@ db.Notification.belongsTo(db.Appointment, { foreignKey: 'appointment_id' });
 db.Patient.hasMany(db.Document, { foreignKey: 'patient_id' });
 db.Document.belongsTo(db.Patient, { foreignKey: 'patient_id' });
 
+// Отзывы
+db.Review = require('./Review')(sequelize, DataTypes);
+
+db.Patient.hasMany(db.Review, { foreignKey: 'patient_id' });
+db.Review.belongsTo(db.Patient, { foreignKey: 'patient_id' });
+
+db.Doctor.hasMany(db.Review, { foreignKey: 'doctor_id' });
+db.Review.belongsTo(db.Doctor, { foreignKey: 'doctor_id' });
+
+db.Appointment.hasOne(db.Review, { foreignKey: 'appointment_id' });
+db.Review.belongsTo(db.Appointment, { foreignKey: 'appointment_id' });
+
 module.exports = db;

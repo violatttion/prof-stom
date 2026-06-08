@@ -1,102 +1,72 @@
 const express = require('express');
 const cors = require('cors');
-const { createServer } = require('http');
+const http = require('http');
 const { Server } = require('socket.io');
-const dotenv = require('dotenv');
+require('dotenv').config();
+
 const { sequelize } = require('./models');
 
-dotenv.config();
-
 const app = express();
-const httpServer = createServer(app);
-const io = new Server(httpServer, {
+const server = http.createServer(app);
+const io = new Server(server, {
   cors: {
     origin: process.env.CLIENT_URL || "http://localhost:5173",
-    methods: ["GET", "POST"]
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"]
   }
 });
 
 // Middleware
-app.use(cors({
-  origin: process.env.CLIENT_URL || "http://localhost:5173",
-  credentials: true
-}));
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Make io available in routes
+// Делаем io доступным во всех контроллерах
 app.set('io', io);
 
-// Routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/appointments', require('./routes/appointments'));
-app.use('/api/patients', require('./routes/patients'));
-app.use('/api/doctors', require('./routes/doctors'));
-app.use('/api/services', require('./routes/services'));
-app.use('/api/teeth-formula', require('./routes/teethFormula'));
-app.use('/api/reports', require('./routes/reports'));
-app.use('/api/notifications', require('./routes/notifications'));
+// ==================== ROUTES ====================
+const authRoutes = require('./routes/authRoutes');
+const appointmentRoutes = require('./routes/appointmentRoutes');
+const patientRoutes = require('./routes/patientRoutes');
+const doctorRoutes = require('./routes/doctorRoutes');
+const serviceRoutes = require('./routes/serviceRoutes');
+const teethFormulaRoutes = require('./routes/teethFormulaRoutes');
+const reviewRoutes = require('./routes/reviewRoutes'); // ← Новый роут
 
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'ПРОФ СТОМ Backend is running' });
-});
+app.use('/api/auth', authRoutes);
+app.use('/api/appointments', appointmentRoutes);
+app.use('/api/patients', patientRoutes);
+app.use('/api/doctors', doctorRoutes);
+app.use('/api/services', serviceRoutes);
+app.use('/api/teeth-formula', teethFormulaRoutes);
+app.use('/api/reviews', reviewRoutes); // ← Подключаем отзывы
 
-// WebSocket connection handling
-io.use((socket, next) => {
-  const token = socket.handshake.auth.token;
-  if (!token) {
-    return next(new Error('Authentication error'));
-  }
-  try {
-    const jwt = require('jsonwebtoken');
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    socket.userId = decoded.id;
-    socket.userRole = decoded.role;
-    next();
-  } catch (err) {
-    next(new Error('Authentication error'));
-  }
-});
-
+// ==================== SOCKET.IO ====================
 io.on('connection', (socket) => {
-  console.log(`User connected: ${socket.userId} (${socket.userRole})`);
-  socket.join(`user_${socket.userId}`);
+  console.log('Пользователь подключился:', socket.id);
 
-  socket.on('join_appointment', (appointmentId) => {
-    socket.join(`appointment_${appointmentId}`);
+  // Присоединяем пользователя к своей комнате
+  socket.on('join', (userId) => {
+    socket.join(`user_${userId}`);
+    console.log(`Пользователь ${userId} присоединился к комнате`);
   });
 
   socket.on('disconnect', () => {
-    console.log(`User disconnected: ${socket.userId}`);
+    console.log('Пользователь отключился:', socket.id);
   });
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Something went wrong!', message: err.message });
-});
+// ==================== DATABASE ====================
+sequelize.sync({ alter: true })
+  .then(() => {
+    console.log('✅ База данных синхронизирована');
+  })
+  .catch(err => {
+    console.error('❌ Ошибка синхронизации БД:', err);
+  });
 
+// ==================== START SERVER ====================
 const PORT = process.env.PORT || 5000;
 
-async function startServer() {
-  try {
-    await sequelize.authenticate();
-    console.log('Database connection established successfully.');
-    
-    // Sync models (in development - use migrations in production)
-    await sequelize.sync({ alter: true });
-    console.log('Database models synchronized.');
-
-    httpServer.listen(PORT, () => {
-      console.log(`🚀 ПРОФ СТОМ Backend running on port ${PORT}`);
-      console.log(`📡 WebSocket server ready`);
-    });
-  } catch (error) {
-    console.error('Unable to start server:', error);
-    process.exit(1);
-  }
-}
-
-startServer();
+server.listen(PORT, () => {
+  console.log(`🚀 Сервер запущен на порту ${PORT}`);
+});

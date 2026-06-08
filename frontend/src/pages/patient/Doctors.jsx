@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Typography, Grid, Card, CardContent, CardActions,
-  Button, TextField, CircularProgress
+  Button, TextField, CircularProgress, Rating, Box
 } from '@mui/material';
 import api from '../../api';
 
@@ -32,7 +32,9 @@ const PatientDoctors = () => {
     return fullName.toLowerCase().includes(s) || specialization.toLowerCase().includes(s);
   });
 
-  if (loading) return <CircularProgress />;
+  if (loading) {
+    return <CircularProgress />;
+  }
 
   return (
     <>
@@ -58,6 +60,20 @@ const PatientDoctors = () => {
                   <Typography color="text.secondary" gutterBottom>
                     {doctor.specialization}
                   </Typography>
+
+                  {/* Средняя оценка врача */}
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                    <Rating 
+                      value={doctor.averageRating || 0} 
+                      precision={0.5} 
+                      readOnly 
+                      size="small" 
+                    />
+                    <Typography variant="body2" sx={{ ml: 1 }}>
+                      {doctor.averageRating ? doctor.averageRating.toFixed(1) : 'Нет оценок'}
+                    </Typography>
+                  </Box>
+
                   <Typography variant="body2">
                     <strong>Телефон:</strong> {doctor.User?.phone || 'Не указан'}
                   </Typography>
@@ -65,6 +81,7 @@ const PatientDoctors = () => {
                     <strong>Кабинет:</strong> {doctor.cabinet || 'Основной'}
                   </Typography>
                 </CardContent>
+
                 <CardActions>
                   <Button 
                     size="small" 

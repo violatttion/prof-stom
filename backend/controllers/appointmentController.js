@@ -95,7 +95,6 @@ class AppointmentController {
     }
   }
 
-  // Функция отправки email при подтверждении записи
   async sendConfirmationEmail(appointment) {
     try {
       const patient = await Patient.findByPk(appointment.patient_id, {
@@ -164,9 +163,8 @@ class AppointmentController {
       if (cancellation_reason) appointment.cancellation_reason = cancellation_reason;
       await appointment.save();
 
-      // Отправляем email, если статус изменился на confirmed
       if (status === 'confirmed' && previousStatus !== 'confirmed') {
-        await sendConfirmationEmail(appointment);
+        await this.sendConfirmationEmail(appointment);
       }
 
       const io = req.app.get('io');
@@ -196,7 +194,7 @@ class AppointmentController {
         include: [
           { model: Patient, include: [User] },
           { model: Doctor, include: [User] },
-          Service
+          { model: Service }
         ],
         order: [['appointment_date', 'DESC'], ['appointment_time', 'DESC']]
       });
@@ -207,7 +205,6 @@ class AppointmentController {
     }
   }
 
-  // === НОВЫЙ МЕТОД: Перенос записи (Drag & Drop) ===
   async rescheduleAppointment(req, res) {
     try {
       const { id } = req.params;
@@ -218,7 +215,6 @@ class AppointmentController {
         return res.status(404).json({ error: 'Запись не найдена' });
       }
 
-      // Проверка занятости слота
       const conflicting = await Appointment.findOne({
         where: {
           doctor_id: appointment.doctor_id,
@@ -246,6 +242,98 @@ class AppointmentController {
       res.json({ message: 'Запись успешно перенесена', appointment });
     } catch (error) {
       console.error('Ошибка переноса записи:', error);
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  async requestReschedule(req, res) {
+    try {
+      const { id } = req.params;
+      const { new_date, new_time } = req.body;
+
+      const appointment = await Appointment.findByPk(id);
+      if (!appointment) return res.status(404).json({ error: 'Запись не найдена' });
+
+      const patient = await Patient.findOne({ where: { user_id: req.user.id } });
+      if (!patient || patient.id !== appointment.patient_id) {
+        return res.status(403).json({ error: 'Нет прав на перенос этой записи' });
+      }
+
+      if (appointment.status === 'cancelled') {
+        return res.status(400).json({ error: 'Нельзя перенести отменённую запись' });
+      }
+
+      appointment.reschedule_date = new_date;
+      appointment.reschedule_time = new_time;
+      appointment.status = 'reschedule_requested';
+
+      await appointment.save();
+
+      res.json({ message: 'Запрос на перенос отправлен администратору' });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  async handleRescheduleRequest(req, res) {
+    try {
+      const { id } = req.params;
+      const { action } = req.body;
+
+      const appointment = await Appointment.findByPk(id);
+      if (!appointment) return res.status(404).json({ error: 'Запись не найдена' });
+
+      if (appointment.status !== 'reschedule_requested') {
+        return res.status(400).json({ error: 'Это не запрос на перенос' });
+      }
+
+      if (action === 'approve') {
+        appointment.appointment_date = appointment.reschedule_date;
+        appointment.appointment_time = appointment.reschedule_time;
+        appointment.status = 'pending';
+        appointment.reschedule_date = null;
+        appointment.reschedule_time = null;
+      } else if (action === 'reject') {
+        appointment.status = 'pending';
+        appointment.reschedule_date = null;
+        appointment.reschedule_time = null;
+      }
+
+      await appointment.save();
+      res.json({ message: `Запрос на перенос ${action === 'approve' ? 'одобрен' : 'отклонён'}` });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  // ==================== УДАЛЕНИЕ ПРИЁМА ВРАЧОМ ====================
+  async deleteAppointment(req, res) {
+    try {
+      const { id } = req.params;
+
+      const appointment = await Appointment.findByPk(id);
+      if (!appointment) {
+        return res.status(404).json({ error: 'Приём не найден' });
+      }
+
+      if (req.user.role === 'doctor') {
+        const doctor = await Doctor.findOne({ where: { user_id: req.user.id } });
+        if (!doctor || doctor.id !== appointment.doctor_id) {
+          return res.status(403).json({ error: 'Нет прав на удаление этой записи' });
+        }
+      }
+
+      await appointment.destroy();
+
+      const io = req.app.get('io');
+      if (io) {
+        io.to(`user_${appointment.patient_id}`).emit('appointment_deleted', { id });
+        io.to(`doctor_${appointment.doctor_id}`).emit('appointment_deleted', { id });
+      }
+
+      res.json({ message: 'Приём успешно удалён' });
+    } catch (error) {
+      console.error('Ошибка удаления приёма:', error);
       res.status(500).json({ error: error.message });
     }
   }

@@ -14,7 +14,6 @@ const translit = (text) => {
   return text.split('').map(char => map[char] || char).join('');
 };
 
-// Маппинг: что показываем → что сохраняем в базу (число)
 const toothLabelToNumber = {
   '8+': 81, '7+': 71, '6+': 61, '5+': 51, '4+': 41, '3+': 31, '2+': 21, '1+': 11,
   '1-': 12, '2-': 22, '3-': 32, '4-': 42, '5-': 52, '6-': 62, '7-': 72, '8-': 82
@@ -37,7 +36,6 @@ const PatientCard = () => {
   const [success, setSuccess] = useState('');
   const [showFormula, setShowFormula] = useState(false);
 
-  // Отображаемые метки (как на твоей схеме)
   const upperRight = ['8+', '7+', '6+', '5+', '4+', '3+', '2+', '1+'];
   const upperLeft  = ['1+', '2+', '3+', '4+', '5+', '6+', '7+', '8+'];
   const lowerRight = ['8-', '7-', '6-', '5-', '4-', '3-', '2-', '1-'];
@@ -88,7 +86,7 @@ const PatientCard = () => {
 
     try {
       await api.put(`/teeth-formula/${latestId}`, {
-        tooth_number: selectedTooth.tooth_number, // сохраняем число
+        tooth_number: selectedTooth.tooth_number,
         status,
         comment
       });
@@ -168,6 +166,7 @@ const PatientCard = () => {
               <TableCell><strong>Время</strong></TableCell>
               <TableCell><strong>Услуга</strong></TableCell>
               <TableCell><strong>Статус</strong></TableCell>
+              <TableCell align="center"><strong>Действия</strong></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -178,10 +177,31 @@ const PatientCard = () => {
                   <TableCell>{app.appointment_time}</TableCell>
                   <TableCell>{app.Service?.name || '—'}</TableCell>
                   <TableCell>{app.status}</TableCell>
+                  <TableCell align="center">
+                    <Button
+                      variant="outlined"
+                      color="error"
+                      size="small"
+                      onClick={async () => {
+                        if (!window.confirm('Удалить этот приём из истории?')) return;
+                        try {
+                          await api.delete(`/appointments/${app.id}`);
+                          setSuccess('Приём удалён');
+                          fetchPatientData();
+                        } catch (err) {
+                          setError('Ошибка при удалении приёма');
+                        }
+                      }}
+                    >
+                      Удалить
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))
             ) : (
-              <TableRow><TableCell colSpan={4} align="center">Записей пока нет</TableCell></TableRow>
+              <TableRow>
+                <TableCell colSpan={5} align="center">Записей пока нет</TableCell>
+              </TableRow>
             )}
           </TableBody>
         </Table>

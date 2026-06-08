@@ -3,22 +3,40 @@ const router = express.Router();
 const appointmentController = require('../controllers/appointmentController');
 const { authenticateToken, authorizeRoles } = require('../middleware/auth');
 
-// Применяем middleware аутентификации ко всем маршрутам
-router.use(authenticateToken);
-
 // Получить все записи (с фильтрами)
-router.get('/', appointmentController.getAll);
+router.get('/', authenticateToken, appointmentController.getAll);
 
 // Создать новую запись
-router.post('/', appointmentController.create);
+router.post('/', authenticateToken, appointmentController.create);
 
-// Получить свои записи (для врача или пациента)
-router.get('/my', appointmentController.getMyAppointments);
+// Получить свои записи (пациент / врач)
+router.get('/my', authenticateToken, appointmentController.getMyAppointments);
 
-// Изменить статус записи (подтвердить / отменить)
-router.patch('/:id/status', appointmentController.updateStatus);
+// Обновить статус записи
+router.patch('/:id/status', authenticateToken, appointmentController.updateStatus);
 
-// Перенести запись (drag & drop)
-router.put('/:id/reschedule', appointmentController.rescheduleAppointment);
+// Перенос записи (для админа и врача)
+router.put('/:id/reschedule', authenticateToken, authorizeRoles('admin', 'doctor'), appointmentController.rescheduleAppointment);
+
+// ==================== НОВЫЕ РОУТЫ ДЛЯ ПЕРЕНОСА ПАЦИЕНТОМ ====================
+
+// Пациент запрашивает перенос своей записи
+router.post(
+  '/:id/request-reschedule',
+  authenticateToken,
+  authorizeRoles('patient'),
+  appointmentController.requestReschedule
+);
+
+// Администратор одобряет или отклоняет запрос на перенос
+router.patch(
+  '/:id/handle-reschedule',
+  authenticateToken,
+  authorizeRoles('admin'),
+  appointmentController.handleRescheduleRequest
+);
+
+// Удаление приёма (только врач)
+router.delete('/:id', authenticateToken, authorizeRoles('doctor'), appointmentController.deleteAppointment);
 
 module.exports = router;
