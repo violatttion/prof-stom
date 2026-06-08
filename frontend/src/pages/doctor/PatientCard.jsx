@@ -10,17 +10,19 @@ import jsPDF from 'jspdf';
 
 const translit = (text) => {
   if (!text) return '';
-  const map = {
-    'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'e','ж':'zh','з':'z','и':'i',
-    'й':'y','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r','с':'s','т':'t',
-    'у':'u','ф':'f','х':'h','ц':'ts','ч':'ch','ш':'sh','щ':'sch','ъ':'','ы':'y','ь':'',
-    'э':'e','ю':'yu','я':'ya','А':'A','Б':'B','В':'V','Г':'G','Д':'D','Е':'E','Ё':'E',
-    'Ж':'Zh','З':'Z','И':'I','Й':'Y','К':'K','Л':'L','М':'M','Н':'N','О':'O','П':'P',
-    'Р':'R','С':'S','Т':'T','У':'U','Ф':'F','Х':'H','Ц':'Ts','Ч':'Ch','Ш':'Sh','Щ':'Sch',
-    'Э':'E','Ю':'Yu','Я':'Ya'
-  };
+  const map = { 'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'e','ж':'zh','з':'z','и':'i','й':'y','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r','с':'s','т':'t','у':'u','ф':'f','х':'h','ц':'ts','ч':'ch','ш':'sh','щ':'sch','ъ':'','ы':'y','ь':'','э':'e','ю':'yu','я':'ya','А':'A','Б':'B','В':'V','Г':'G','Д':'D','Е':'E','Ё':'E','Ж':'Zh','З':'Z','И':'I','Й':'Y','К':'K','Л':'L','М':'M','Н':'N','О':'O','П':'P','Р':'R','С':'S','Т':'T','У':'U','Ф':'F','Х':'H','Ц':'Ts','Ч':'Ch','Ш':'Sh','Щ':'Sch','Э':'E','Ю':'Yu','Я':'Ya' };
   return text.split('').map(char => map[char] || char).join('');
 };
+
+// Маппинг: что показываем → что сохраняем в базу (число)
+const toothLabelToNumber = {
+  '8+': 81, '7+': 71, '6+': 61, '5+': 51, '4+': 41, '3+': 31, '2+': 21, '1+': 11,
+  '1-': 12, '2-': 22, '3-': 32, '4-': 42, '5-': 52, '6-': 62, '7-': 72, '8-': 82
+};
+
+const numberToToothLabel = Object.fromEntries(
+  Object.entries(toothLabelToNumber).map(([label, num]) => [num, label])
+);
 
 const PatientCard = () => {
   const { id } = useParams();
@@ -35,7 +37,7 @@ const PatientCard = () => {
   const [success, setSuccess] = useState('');
   const [showFormula, setShowFormula] = useState(false);
 
-  // === Схема Палмера (как ты просил) ===
+  // Отображаемые метки (как на твоей схеме)
   const upperRight = ['8+', '7+', '6+', '5+', '4+', '3+', '2+', '1+'];
   const upperLeft  = ['1+', '2+', '3+', '4+', '5+', '6+', '7+', '8+'];
   const lowerRight = ['8-', '7-', '6-', '5-', '4-', '3-', '2-', '1-'];
@@ -66,57 +68,44 @@ const PatientCard = () => {
     }
   };
 
-  const getToothData = (number) => {
+  const getToothData = (label) => {
+    const number = toothLabelToNumber[label];
     return teeth.find(t => t.tooth_number === number) || { tooth_number: number, status: 'healthy', comment: '' };
   };
 
-  const handleToothClick = (number) => {
+  const handleToothClick = (label) => {
     if (appointments.length === 0) return;
-    const toothData = getToothData(number);
-    setSelectedTooth(toothData);
+    const toothData = getToothData(label);
+    setSelectedTooth({ ...toothData, displayLabel: label });
     setStatus(toothData.status || 'healthy');
     setComment(toothData.comment || '');
     setOpenDialog(true);
   };
 
-  // === УЛУЧШЕННАЯ ФУНКЦИЯ СОХРАНЕНИЯ С ПОДРОБНОЙ ОШИБКОЙ ===
   const handleSaveTooth = async () => {
     if (!selectedTooth || appointments.length === 0) return;
-
     const latestId = appointments[0].id;
 
     try {
       await api.put(`/teeth-formula/${latestId}`, {
-        tooth_number: selectedTooth.tooth_number,
+        tooth_number: selectedTooth.tooth_number, // сохраняем число
         status,
         comment
       });
-
-      setSuccess('Зуб успешно сохранён');
+      setSuccess('Зуб сохранён');
       setOpenDialog(false);
       fetchPatientData();
     } catch (err) {
-      console.error('Ошибка сохранения зуба:', err);
-      
-      let errorMessage = 'Ошибка сохранения';
-      
-      if (err.response?.data?.error) {
-        errorMessage = err.response.data.error;
-      } else if (err.message) {
-        errorMessage = err.message;
-      }
-      
-      setError(`Ошибка сохранения: ${errorMessage}`);
+      console.error(err);
+      setError(err.response?.data?.error || 'Ошибка сохранения');
     }
   };
 
   const exportToPDF = () => {
     if (!patient) return;
-
     const doc = new jsPDF();
     doc.setFontSize(18);
     doc.text('PATIENT MEDICAL CARD', 105, 20, { align: 'center' });
-
     doc.setFontSize(12);
     doc.text(`Full Name: ${translit(patient.User?.full_name || patient.full_name)}`, 20, 35);
     doc.text(`Phone: ${patient.User?.phone || patient.phone || '—'}`, 20, 43);
@@ -125,7 +114,6 @@ const PatientCard = () => {
     let y = 65;
     doc.text('Appointment History:', 20, y);
     y += 10;
-
     appointments.forEach((app, index) => {
       doc.text(`${index + 1}. ${app.appointment_date} | ${app.appointment_time} | ${translit(app.Service?.name || '—')}`, 20, y);
       y += 8;
@@ -135,17 +123,13 @@ const PatientCard = () => {
     doc.text('Dental Formula (Latest Visit):', 20, y);
     y += 10;
 
-    const changedTeeth = teeth.filter(t => t.status && t.status !== 'healthy');
-    
-    if (changedTeeth.length > 0) {
-      changedTeeth.forEach((tooth) => {
-        const commentText = tooth.comment ? ` - ${translit(tooth.comment)}` : '';
-        doc.text(`Tooth ${tooth.tooth_number}: ${tooth.status}${commentText}`, 20, y);
+    teeth.forEach((tooth) => {
+      const label = numberToToothLabel[tooth.tooth_number] || tooth.tooth_number;
+      if (tooth.status && tooth.status !== 'healthy') {
+        doc.text(`Tooth ${label}: ${tooth.status} ${tooth.comment ? '- ' + translit(tooth.comment) : ''}`, 20, y);
         y += 8;
-      });
-    } else {
-      doc.text('No changes recorded.', 20, y);
-    }
+      }
+    });
 
     const fileName = translit(patient.User?.full_name || patient.full_name || 'patient').replace(/\s+/g, '_');
     doc.save(`Patient_Card_${fileName}.pdf`);
@@ -210,19 +194,16 @@ const PatientCard = () => {
 
         <Collapse in={showFormula}>
           <Typography variant="h6" gutterBottom>Зубная формула</Typography>
-
           <Paper elevation={4} sx={{ p: 3, borderRadius: 3 }}>
-            <Typography variant="subtitle2" sx={{ mb: 1, color: '#1565c0', textAlign: 'center' }}>
-              Верхняя челюсть
-            </Typography>
+            <Typography variant="subtitle2" sx={{ mb: 1, color: '#1565c0', textAlign: 'center' }}>Верхняя челюсть</Typography>
 
             <Grid container spacing={0.5} sx={{ mb: 2 }}>
-              {upperRight.map((num) => {
-                const tooth = getToothData(num);
+              {upperRight.map((label) => {
+                const tooth = getToothData(label);
                 return (
-                  <Grid item xs={1.5} key={num}>
-                    <Button variant="outlined" fullWidth onClick={() => handleToothClick(num)} sx={{ minHeight: 52 }}>
-                      {num}
+                  <Grid item xs={1.5} key={label}>
+                    <Button variant="outlined" fullWidth onClick={() => handleToothClick(label)} sx={{ minHeight: 52 }}>
+                      {label}
                       {tooth.status && tooth.status !== 'healthy' && <Chip label={tooth.status} size="small" sx={{ ml: 0.5 }} />}
                     </Button>
                   </Grid>
@@ -231,12 +212,12 @@ const PatientCard = () => {
             </Grid>
 
             <Grid container spacing={0.5} sx={{ mb: 3 }}>
-              {upperLeft.map((num) => {
-                const tooth = getToothData(num);
+              {upperLeft.map((label) => {
+                const tooth = getToothData(label);
                 return (
-                  <Grid item xs={1.5} key={num}>
-                    <Button variant="outlined" fullWidth onClick={() => handleToothClick(num)} sx={{ minHeight: 52 }}>
-                      {num}
+                  <Grid item xs={1.5} key={label}>
+                    <Button variant="outlined" fullWidth onClick={() => handleToothClick(label)} sx={{ minHeight: 52 }}>
+                      {label}
                       {tooth.status && tooth.status !== 'healthy' && <Chip label={tooth.status} size="small" sx={{ ml: 0.5 }} />}
                     </Button>
                   </Grid>
@@ -244,17 +225,15 @@ const PatientCard = () => {
               })}
             </Grid>
 
-            <Typography variant="subtitle2" sx={{ mb: 1, color: '#1565c0', textAlign: 'center' }}>
-              Нижняя челюсть
-            </Typography>
+            <Typography variant="subtitle2" sx={{ mb: 1, color: '#1565c0', textAlign: 'center' }}>Нижняя челюсть</Typography>
 
             <Grid container spacing={0.5}>
-              {lowerRight.map((num) => {
-                const tooth = getToothData(num);
+              {lowerRight.map((label) => {
+                const tooth = getToothData(label);
                 return (
-                  <Grid item xs={1.5} key={num}>
-                    <Button variant="outlined" fullWidth onClick={() => handleToothClick(num)} sx={{ minHeight: 52 }}>
-                      {num}
+                  <Grid item xs={1.5} key={label}>
+                    <Button variant="outlined" fullWidth onClick={() => handleToothClick(label)} sx={{ minHeight: 52 }}>
+                      {label}
                       {tooth.status && tooth.status !== 'healthy' && <Chip label={tooth.status} size="small" sx={{ ml: 0.5 }} />}
                     </Button>
                   </Grid>
@@ -263,12 +242,12 @@ const PatientCard = () => {
             </Grid>
 
             <Grid container spacing={0.5}>
-              {lowerLeft.map((num) => {
-                const tooth = getToothData(num);
+              {lowerLeft.map((label) => {
+                const tooth = getToothData(label);
                 return (
-                  <Grid item xs={1.5} key={num}>
-                    <Button variant="outlined" fullWidth onClick={() => handleToothClick(num)} sx={{ minHeight: 52 }}>
-                      {num}
+                  <Grid item xs={1.5} key={label}>
+                    <Button variant="outlined" fullWidth onClick={() => handleToothClick(label)} sx={{ minHeight: 52 }}>
+                      {label}
                       {tooth.status && tooth.status !== 'healthy' && <Chip label={tooth.status} size="small" sx={{ ml: 0.5 }} />}
                     </Button>
                   </Grid>
@@ -280,17 +259,9 @@ const PatientCard = () => {
       </Box>
 
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Зуб {selectedTooth?.tooth_number}</DialogTitle>
+        <DialogTitle>Зуб {selectedTooth?.displayLabel}</DialogTitle>
         <DialogContent>
-          <TextField
-            select
-            label="Состояние"
-            fullWidth
-            margin="normal"
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            SelectProps={{ native: true }}
-          >
+          <TextField select label="Состояние" fullWidth margin="normal" value={status} onChange={(e) => setStatus(e.target.value)} SelectProps={{ native: true }}>
             <option value="healthy">Здоров</option>
             <option value="caries">Кариес</option>
             <option value="filling">Пломба</option>
