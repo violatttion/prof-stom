@@ -35,7 +35,7 @@ const PatientCard = () => {
   const [success, setSuccess] = useState('');
   const [showFormula, setShowFormula] = useState(false);
 
-  // === ТОЧНАЯ СХЕМА ПАЛМЕРА (как ты скинул) ===
+  // === Схема Палмера (как ты просил) ===
   const upperRight = ['8+', '7+', '6+', '5+', '4+', '3+', '2+', '1+'];
   const upperLeft  = ['1+', '2+', '3+', '4+', '5+', '6+', '7+', '8+'];
   const lowerRight = ['8-', '7-', '6-', '5-', '4-', '3-', '2-', '1-'];
@@ -79,8 +79,10 @@ const PatientCard = () => {
     setOpenDialog(true);
   };
 
+  // === УЛУЧШЕННАЯ ФУНКЦИЯ СОХРАНЕНИЯ С ПОДРОБНОЙ ОШИБКОЙ ===
   const handleSaveTooth = async () => {
     if (!selectedTooth || appointments.length === 0) return;
+
     const latestId = appointments[0].id;
 
     try {
@@ -89,15 +91,25 @@ const PatientCard = () => {
         status,
         comment
       });
-      setSuccess('Зуб сохранён');
+
+      setSuccess('Зуб успешно сохранён');
       setOpenDialog(false);
       fetchPatientData();
     } catch (err) {
-      setError('Ошибка сохранения');
+      console.error('Ошибка сохранения зуба:', err);
+      
+      let errorMessage = 'Ошибка сохранения';
+      
+      if (err.response?.data?.error) {
+        errorMessage = err.response.data.error;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      setError(`Ошибка сохранения: ${errorMessage}`);
     }
   };
 
-  // === РАБОЧИЙ ЭКСПОРТ В PDF ===
   const exportToPDF = () => {
     if (!patient) return;
 
@@ -115,8 +127,7 @@ const PatientCard = () => {
     y += 10;
 
     appointments.forEach((app, index) => {
-      const serviceName = translit(app.Service?.name || '—');
-      doc.text(`${index + 1}. ${app.appointment_date} | ${app.appointment_time} | ${serviceName}`, 20, y);
+      doc.text(`${index + 1}. ${app.appointment_date} | ${app.appointment_time} | ${translit(app.Service?.name || '—')}`, 20, y);
       y += 8;
     });
 
@@ -124,7 +135,6 @@ const PatientCard = () => {
     doc.text('Dental Formula (Latest Visit):', 20, y);
     y += 10;
 
-    // Выводим только изменённые зубы
     const changedTeeth = teeth.filter(t => t.status && t.status !== 'healthy');
     
     if (changedTeeth.length > 0) {
@@ -134,12 +144,10 @@ const PatientCard = () => {
         y += 8;
       });
     } else {
-      doc.text('No changes recorded in dental formula.', 20, y);
+      doc.text('No changes recorded.', 20, y);
     }
 
-    const fileName = translit(patient.User?.full_name || patient.full_name || 'patient')
-      .replace(/\s+/g, '_');
-    
+    const fileName = translit(patient.User?.full_name || patient.full_name || 'patient').replace(/\s+/g, '_');
     doc.save(`Patient_Card_${fileName}.pdf`);
   };
 
@@ -162,9 +170,7 @@ const PatientCard = () => {
             <Typography><strong>Email:</strong> {patient.User?.email || patient.email || '—'}</Typography>
           </Grid>
           <Grid item xs={12} md={4} sx={{ textAlign: { md: 'right' } }}>
-            <Button variant="contained" onClick={exportToPDF}>
-              Экспорт в PDF
-            </Button>
+            <Button variant="contained" onClick={exportToPDF}>Экспорт в PDF</Button>
           </Grid>
         </Grid>
       </Paper>
@@ -197,7 +203,6 @@ const PatientCard = () => {
         </Table>
       </TableContainer>
 
-      {/* ЗУБНАЯ ФОРМУЛА (Палмер) */}
       <Box>
         <Button variant="contained" onClick={() => setShowFormula(!showFormula)} sx={{ mb: 2 }}>
           {showFormula ? 'Скрыть зубную формулу' : 'Показать зубную формулу'}
