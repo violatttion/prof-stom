@@ -1,103 +1,129 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
-  Typography, Paper, Table, TableBody, TableCell, TableContainer,
-  TableHead, TableRow, Chip, Button, Alert
+  Typography, Paper, Grid, Button, TextField, MenuItem, Alert, Box
 } from '@mui/material';
 import api from '../../api';
 
-const MyAppointments = () => {
-  const [appointments, setAppointments] = useState([]);
+const BookAppointment = () => {
+  const [searchParams] = useSearchParams();
+  const preselectedDoctorId = searchParams.get('doctorId');
+
+  const [doctors, setDoctors] = useState([]);
+  const [services, setServices] = useState([]);
+  const [formData, setFormData] = useState({
+    doctor_id: preselectedDoctorId || '',
+    service_id: '',
+    appointment_date: '',
+    appointment_time: '',
+    notes: ''
+  });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetchAppointments();
+    fetchData();
   }, []);
 
-  const fetchAppointments = async () => {
+  const fetchData = async () => {
     try {
-      const res = await api.get('/appointments/my');
-      setAppointments(res.data || []);
+      const [doctorsRes, servicesRes] = await Promise.all([
+        api.get('/doctors'),
+        api.get('/services')
+      ]);
+      setDoctors(doctorsRes.data || []);
+      setServices(servicesRes.data || []);
     } catch (err) {
-      setError('Не удалось загрузить записи');
+      setError('Не удалось загрузить данные');
     }
   };
 
-  const handleCancel = async (id) => {
-    if (!window.confirm('Отменить запись?')) return;
-
-    try {
-      await api.patch(`/appointments/${id}/status`, { status: 'cancelled' });
-      setSuccess('Запись отменена');
-      fetchAppointments();
-    } catch (err) {
-      setError(err.response?.data?.error || 'Ошибка при отмене');
-    }
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const getStatusColor = (status) => {
-    if (status === 'confirmed') return 'success';
-    if (status === 'pending') return 'warning';
-    if (status === 'cancelled') return 'error';
-    return 'default';
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    setLoading(true);
+
+    try {
+      await api.post('/appointments', {
+        doctor_id: formData.doctor_id,
+        service_ids: formData.service_id ? [formData.service_id] : [],
+        appointment_date: formData.appointment_date,
+        appointment_time: formData.appointment_time,
+        notes: formData.notes
+      });
+      setSuccess('Запись успешно создана!');
+      setFormData({ doctor_id: '', service_id: '', appointment_date: '', appointment_time: '', notes: '' });
+    } catch (err) {
+      setError(err.response?.data?.error || 'Ошибка при создании записи');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <>
-      <Typography variant="h4" gutterBottom sx={{ color: '#0d47a1', fontWeight: 700, mb: 4 }}>
-        Мои записи
+      <Typography variant="h4" gutterBottom sx={{ color: '#0d47a1', fontWeight: 700, mb: 4, textAlign: 'center' }}>
+        Записаться на приём
       </Typography>
 
       {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
       {success && <Alert severity="success" sx={{ mb: 3 }}>{success}</Alert>}
 
-      <TableContainer component={Paper} elevation={4} sx={{ borderRadius: 3 }}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell><strong>Дата</strong></TableCell>
-              <TableCell><strong>Время</strong></TableCell>
-              <TableCell><strong>Врач</strong></TableCell>
-              <TableCell><strong>Услуга</strong></TableCell>
-              <TableCell align="center"><strong>Статус</strong></TableCell>
-              <TableCell align="center"><strong>Действия</strong></TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {appointments.length > 0 ? (
-              appointments.map((app) => (
-                <TableRow key={app.id}>
-                  <TableCell>{app.appointment_date}</TableCell>
-                  <TableCell>{app.appointment_time}</TableCell>
-                  <TableCell>{app.Doctor?.User?.full_name || '—'}</TableCell>
-                  <TableCell>{app.Service?.name || (app.Services && app.Services[0]?.name) || '—'}</TableCell>
-                  <TableCell align="center">
-                    <Chip label={app.status} color={getStatusColor(app.status)} size="small" />
-                  </TableCell>
-                  <TableCell align="center">
-                    {(app.status === 'pending' || app.status === 'confirmed') && (
-                      <Button
-                        variant="outlined"
-                        color="error"
-                        size="small"
-                        onClick={() => handleCancel(app.id)}
-                      >
-                        Отменить
-                      </Button>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={6} align="center">Записей пока нет</TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+        <Paper elevation={4} sx={{ p: 4, borderRadius: 3, maxWidth: 600, width: '100%' }}>
+          <Box component="form" onSubmit={handleSubmit}>
+            <TextField
+              select
+              name="doctor_id"
+              label="Врач"
+              fullWidth
+              margin="normal"
+              value={formData.doctor_id}
+              onChange={handleChange}
+              required
+            >
+              {doctors.map((doctor) => (
+                <MenuItem key={doctor.id} value={doctor.id}>
+                  {doctor.User?.full_name} — {doctor.specialization}
+                </MenuItem>
+              ))}
+            </TextField>
+
+            <TextField
+              select
+              name="service_id"
+              label="Услуга"
+              fullWidth
+              margin="normal"
+              value={formData.service_id}
+              onChange={handleChange}
+              required
+            >
+              {services.map((service) => (
+                <MenuItem key={service.id} value={service.id}>
+                  {service.name} — {service.price} ₽
+                </MenuItem>
+              ))}
+            </TextField>
+
+            <TextField name="appointment_date" label="Дата" type="date" fullWidth margin="normal" value={formData.appointment_date} onChange={handleChange} required InputLabelProps={{ shrink: true }} />
+            <TextField name="appointment_time" label="Время" type="time" fullWidth margin="normal" value={formData.appointment_time} onChange={handleChange} required InputLabelProps={{ shrink: true }} />
+            <TextField name="notes" label="Примечание" fullWidth margin="normal" multiline rows={3} value={formData.notes} onChange={handleChange} />
+
+            <Button type="submit" variant="contained" size="large" fullWidth sx={{ mt: 3, py: 1.5 }} disabled={loading}>
+              {loading ? 'Запись...' : 'Записаться'}
+            </Button>
+          </Box>
+        </Paper>
+      </Box>
     </>
   );
 };
 
-export default MyAppointments;
+export default BookAppointment;
