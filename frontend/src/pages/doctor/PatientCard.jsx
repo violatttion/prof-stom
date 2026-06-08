@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import {
   Typography, Paper, Grid, Button, Table, TableBody, TableCell,
   TableContainer, TableHead, TableRow, Alert, TextField, Chip,
-  Dialog, DialogTitle, DialogContent, DialogActions, Box, Collapse
+  Dialog, DialogTitle, DialogContent, DialogActions, Box, Collapse, CircularProgress
 } from '@mui/material';
 import api from '../../api';
 import jsPDF from 'jspdf';
@@ -35,6 +35,7 @@ const PatientCard = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [showFormula, setShowFormula] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const upperRight = ['8+', '7+', '6+', '5+', '4+', '3+', '2+', '1+'];
   const upperLeft  = ['1+', '2+', '3+', '4+', '5+', '6+', '7+', '8+'];
@@ -46,6 +47,8 @@ const PatientCard = () => {
   }, [id]);
 
   const fetchPatientData = async () => {
+    setLoading(true);
+    setError('');
     try {
       const patientRes = await api.get(`/patients/${id}`);
       setPatient(patientRes.data);
@@ -62,7 +65,10 @@ const PatientCard = () => {
         setTeeth(teethRes.data || []);
       }
     } catch (err) {
+      console.error('Ошибка загрузки карты пациента:', err);
       setError('Не удалось загрузить данные пациента');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -133,8 +139,21 @@ const PatientCard = () => {
     doc.save(`Patient_Card_${fileName}.pdf`);
   };
 
-  if (error) return <Alert severity="error">{error}</Alert>;
-  if (!patient) return <Typography>Загрузка...</Typography>;
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return <Alert severity="error" sx={{ m: 3 }}>{error}</Alert>;
+  }
+
+  if (!patient) {
+    return <Typography sx={{ m: 3 }}>Пациент не найден</Typography>;
+  }
 
   return (
     <>
@@ -281,7 +300,15 @@ const PatientCard = () => {
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Зуб {selectedTooth?.displayLabel}</DialogTitle>
         <DialogContent>
-          <TextField select label="Состояние" fullWidth margin="normal" value={status} onChange={(e) => setStatus(e.target.value)} SelectProps={{ native: true }}>
+          <TextField 
+            select 
+            label="Состояние" 
+            fullWidth 
+            margin="normal" 
+            value={status} 
+            onChange={(e) => setStatus(e.target.value)} 
+            SelectProps={{ native: true }}
+          >
             <option value="healthy">Здоров</option>
             <option value="caries">Кариес</option>
             <option value="filling">Пломба</option>
@@ -289,7 +316,15 @@ const PatientCard = () => {
             <option value="implant">Имплант</option>
             <option value="crown">Коронка</option>
           </TextField>
-          <TextField label="Комментарий" fullWidth margin="normal" multiline rows={4} value={comment} onChange={(e) => setComment(e.target.value)} />
+          <TextField 
+            label="Комментарий" 
+            fullWidth 
+            margin="normal" 
+            multiline 
+            rows={4} 
+            value={comment} 
+            onChange={(e) => setComment(e.target.value)} 
+          />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenDialog(false)}>Отмена</Button>

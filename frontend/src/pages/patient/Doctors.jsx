@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Typography, Grid, Card, CardContent, CardActions,
-  Button, TextField, CircularProgress, Rating, Box
+  Button, TextField, CircularProgress, Rating, Box, Alert
 } from '@mui/material';
 import api from '../../api';
 
@@ -9,17 +9,21 @@ const PatientDoctors = () => {
   const [doctors, setDoctors] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     fetchDoctors();
   }, []);
 
   const fetchDoctors = async () => {
+    setLoading(true);
+    setError('');
     try {
       const res = await api.get('/doctors');
       setDoctors(res.data || []);
     } catch (err) {
-      console.error(err);
+      console.error('Ошибка загрузки врачей:', err);
+      setError('Не удалось загрузить список врачей');
     } finally {
       setLoading(false);
     }
@@ -33,7 +37,11 @@ const PatientDoctors = () => {
   });
 
   if (loading) {
-    return <CircularProgress />;
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}>
+        <CircularProgress />
+      </Box>
+    );
   }
 
   return (
@@ -41,6 +49,8 @@ const PatientDoctors = () => {
       <Typography variant="h4" gutterBottom sx={{ color: '#0d47a1', fontWeight: 700, mb: 4 }}>
         Наши врачи
       </Typography>
+
+      {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
 
       <TextField
         label="Поиск врача"
@@ -58,10 +68,10 @@ const PatientDoctors = () => {
                 <CardContent sx={{ flexGrow: 1 }}>
                   <Typography variant="h6">{doctor.User?.full_name || 'Врач'}</Typography>
                   <Typography color="text.secondary" gutterBottom>
-                    {doctor.specialization}
+                    {doctor.specialization || 'Стоматолог'}
                   </Typography>
 
-                  {/* Средняя оценка врача */}
+                  {/* Средняя оценка (теперь приходит с бэкенда) */}
                   <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                     <Rating 
                       value={doctor.averageRating || 0} 
@@ -70,7 +80,9 @@ const PatientDoctors = () => {
                       size="small" 
                     />
                     <Typography variant="body2" sx={{ ml: 1 }}>
-                      {doctor.averageRating ? doctor.averageRating.toFixed(1) : 'Нет оценок'}
+                      {doctor.averageRating 
+                        ? `${doctor.averageRating} (${doctor.reviewsCount || 0} отзывов)` 
+                        : 'Нет оценок'}
                     </Typography>
                   </Box>
 
@@ -96,7 +108,9 @@ const PatientDoctors = () => {
           ))
         ) : (
           <Grid item xs={12}>
-            <Typography align="center" color="text.secondary">Врачи не найдены</Typography>
+            <Typography align="center" color="text.secondary">
+              {search ? 'Врачи не найдены по вашему запросу' : 'Врачи не найдены'}
+            </Typography>
           </Grid>
         )}
       </Grid>

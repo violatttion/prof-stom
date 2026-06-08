@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Typography, Paper, TextField, Table, TableBody, TableCell,
-  TableContainer, TableHead, TableRow, Button
+  TableContainer, TableHead, TableRow, Button, Alert, CircularProgress, Box
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api';
@@ -9,6 +9,8 @@ import api from '../../api';
 const DoctorPatients = () => {
   const [patients, setPatients] = useState([]);
   const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -16,11 +18,16 @@ const DoctorPatients = () => {
   }, []);
 
   const fetchPatients = async () => {
+    setLoading(true);
+    setError('');
     try {
       const res = await api.get('/patients');
       setPatients(res.data || []);
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      console.error('Ошибка загрузки пациентов:', err);
+      setError('Не удалось загрузить список пациентов');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -31,15 +38,25 @@ const DoctorPatients = () => {
     const s = search.toLowerCase();
 
     return fullName.toLowerCase().includes(s) ||
-           phone.includes(search) ||
+           phone.toLowerCase().includes(s) ||
            email.toLowerCase().includes(s);
   });
+
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <>
       <Typography variant="h4" gutterBottom sx={{ color: '#0d47a1', fontWeight: 700, mb: 4 }}>
         Мои пациенты
       </Typography>
+
+      {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
 
       <TextField
         label="Поиск по ФИО, телефону или email"
@@ -79,7 +96,9 @@ const DoctorPatients = () => {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={4} align="center">Пациенты не найдены</TableCell>
+                <TableCell colSpan={4} align="center">
+                  {search ? 'Пациенты не найдены по вашему запросу' : 'Пациенты не найдены'}
+                </TableCell>
               </TableRow>
             )}
           </TableBody>

@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import {
   Typography, Paper, Button, TextField, Table, TableBody, TableCell,
   TableContainer, TableHead, TableRow, Dialog, DialogTitle, DialogContent,
-  DialogActions, Alert, MenuItem, Grid
+  DialogActions, Alert, MenuItem, Grid, CircularProgress, Box
 } from '@mui/material';
 import api from '../../api';
 
 const AdminStaff = () => {
   const [staff, setStaff] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
@@ -25,8 +26,9 @@ const AdminStaff = () => {
   }, []);
 
   const fetchStaff = async () => {
+    setLoading(true);
+    setError('');
     try {
-      // Загружаем врачей (основной список сотрудников)
       const doctorsRes = await api.get('/doctors');
       const doctors = (doctorsRes.data || []).map(d => ({
         ...d.User,
@@ -35,10 +37,12 @@ const AdminStaff = () => {
         specialization: d.specialization,
         cabinet: d.cabinet
       }));
-
       setStaff(doctors);
     } catch (err) {
+      console.error('Ошибка загрузки сотрудников:', err);
       setError('Не удалось загрузить список сотрудников');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -52,6 +56,9 @@ const AdminStaff = () => {
       return;
     }
 
+    setError('');
+    setSuccess('');
+
     try {
       await api.post('/auth/register', {
         fullName: formData.fullName,
@@ -62,11 +69,20 @@ const AdminStaff = () => {
         specialization: formData.role === 'doctor' ? formData.specialization : undefined
       });
 
-      setSuccess('Сотрудник успешно добавлен');
+      const isAdmin = formData.role === 'admin';
+      
+      setSuccess(
+        isAdmin 
+          ? 'Администратор успешно добавлен (но не отображается в этом списке — здесь только врачи)' 
+          : 'Врач успешно добавлен'
+      );
+      
       setOpen(false);
       setFormData({
         fullName: '', email: '', password: '', phone: '', role: 'doctor', specialization: ''
       });
+      
+      // ← Главное исправление: список обновляется сразу
       fetchStaff();
     } catch (err) {
       setError(err.response?.data?.error || 'Ошибка при добавлении сотрудника');
@@ -74,16 +90,16 @@ const AdminStaff = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Удалить этого сотрудника?')) return;
-
-    try {
-      await api.delete(`/users/${id}`);
-      setSuccess('Сотрудник удалён');
-      fetchStaff();
-    } catch (err) {
-      setError('Ошибка при удалении');
-    }
+    alert('Удаление сотрудников временно недоступно (нет соответствующего эндпоинта на бэкенде). Функция будет добавлена позже.');
   };
+
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <>
@@ -140,7 +156,7 @@ const AdminStaff = () => {
         </Table>
       </TableContainer>
 
-      {/* Диалог добавления сотрудника */}
+      {/* Диалог добавления */}
       <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Добавить нового сотрудника</DialogTitle>
         <DialogContent>
@@ -170,7 +186,14 @@ const AdminStaff = () => {
               margin="normal"
               value={formData.specialization}
               onChange={handleChange}
+              placeholder="Стоматолог-терапевт"
             />
+          )}
+
+          {formData.role === 'admin' && (
+            <Alert severity="info" sx={{ mt: 2 }}>
+              Администраторы не отображаются в этом списке (здесь только врачи).
+            </Alert>
           )}
         </DialogContent>
         <DialogActions>

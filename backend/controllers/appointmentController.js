@@ -15,6 +15,7 @@ class AppointmentController {
       if (status) where.status = status;
       if (patientId) where.patient_id = patientId;
 
+      // Только врач и пациент видят свои записи. Админ видит всё.
       if (req.user.role === 'doctor') {
         const doctor = await Doctor.findOne({ where: { user_id: req.user.id } });
         if (doctor) where.doctor_id = doctor.id;
@@ -36,6 +37,7 @@ class AppointmentController {
 
       res.json(appointments);
     } catch (error) {
+      console.error('getAll error:', error);
       res.status(500).json({ error: error.message });
     }
   }
@@ -181,6 +183,7 @@ class AppointmentController {
   async getMyAppointments(req, res) {
     try {
       let where = {};
+
       if (req.user.role === 'patient') {
         const patient = await Patient.findOne({ where: { user_id: req.user.id } });
         if (patient) where.patient_id = patient.id;
@@ -192,8 +195,8 @@ class AppointmentController {
       const appointments = await Appointment.findAll({
         where,
         include: [
-          { model: Patient, include: [User] },
-          { model: Doctor, include: [User] },
+          { model: Patient, include: [{ model: User, attributes: ['full_name', 'phone'] }] },
+          { model: Doctor, include: [{ model: User, attributes: ['full_name'] }] },
           { model: Service }
         ],
         order: [['appointment_date', 'DESC'], ['appointment_time', 'DESC']]
@@ -201,6 +204,7 @@ class AppointmentController {
 
       res.json(appointments);
     } catch (error) {
+      console.error('getMyAppointments error:', error);
       res.status(500).json({ error: error.message });
     }
   }
@@ -306,7 +310,6 @@ class AppointmentController {
     }
   }
 
-  // ==================== УДАЛЕНИЕ ПРИЁМА ВРАЧОМ ====================
   async deleteAppointment(req, res) {
     try {
       const { id } = req.params;

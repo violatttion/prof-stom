@@ -6,8 +6,18 @@ class ReviewController {
     try {
       const { appointment_id, rating, comment } = req.body;
 
+      if (!appointment_id || !rating) {
+        return res.status(400).json({ error: 'ID приёма и оценка обязательны' });
+      }
+
+      if (rating < 1 || rating > 5) {
+        return res.status(400).json({ error: 'Оценка должна быть от 1 до 5' });
+      }
+
       const appointment = await Appointment.findByPk(appointment_id);
-      if (!appointment) return res.status(404).json({ error: 'Приём не найден' });
+      if (!appointment) {
+        return res.status(404).json({ error: 'Приём не найден' });
+      }
 
       if (appointment.status !== 'confirmed') {
         return res.status(400).json({ error: 'Отзыв можно оставить только после подтверждённого приёма' });
@@ -30,16 +40,17 @@ class ReviewController {
         doctor_id: appointment.doctor_id,
         appointment_id,
         rating,
-        comment
+        comment: comment || ''
       });
 
       res.status(201).json(review);
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      console.error('Ошибка создания отзыва:', error);
+      res.status(500).json({ error: 'Не удалось сохранить отзыв' });
     }
   }
 
-  // Получить все отзывы врача
+  // Получить все отзывы врача (с именем пациента)
   async getDoctorReviews(req, res) {
     try {
       const { doctorId } = req.params;
@@ -47,14 +58,18 @@ class ReviewController {
       const reviews = await Review.findAll({
         where: { doctor_id: doctorId },
         include: [
-          { model: Patient, include: [{ model: User, attributes: ['full_name'] }] }
+          { 
+            model: Patient, 
+            include: [{ model: User, attributes: ['full_name'] }] 
+          }
         ],
         order: [['created_at', 'DESC']]
       });
 
       res.json(reviews);
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      console.error('Ошибка получения отзывов врача:', error);
+      res.status(500).json({ error: 'Не удалось загрузить отзывы' });
     }
   }
 }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
-  Typography, Paper, Grid, Button, TextField, MenuItem, Alert, Box
+  Typography, Paper, Grid, Button, TextField, MenuItem, Alert, Box, CircularProgress
 } from '@mui/material';
 import api from '../../api';
 
@@ -22,12 +22,15 @@ const BookAppointment = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   useEffect(() => {
     fetchData();
   }, []);
 
   const fetchData = async () => {
+    setInitialLoading(true);
+    setError('');
     try {
       const [doctorsRes, servicesRes] = await Promise.all([
         api.get('/doctors'),
@@ -36,7 +39,10 @@ const BookAppointment = () => {
       setDoctors(doctorsRes.data || []);
       setServices(servicesRes.data || []);
     } catch (err) {
-      setError('Не удалось загрузить данные');
+      console.error('Ошибка загрузки данных для записи:', err);
+      setError('Не удалось загрузить список врачей и услуг');
+    } finally {
+      setInitialLoading(false);
     }
   };
 
@@ -58,7 +64,7 @@ const BookAppointment = () => {
         appointment_time: formData.appointment_time,
         notes: formData.notes
       });
-      setSuccess('Запись успешно создана!');
+      setSuccess('Запись успешно создана! Мы свяжемся с вами для подтверждения.');
       setFormData({
         doctor_id: preselectedDoctorId || '',
         service_id: preselectedServiceId || '',
@@ -72,6 +78,14 @@ const BookAppointment = () => {
       setLoading(false);
     }
   };
+
+  if (initialLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <>
@@ -95,11 +109,15 @@ const BookAppointment = () => {
               onChange={handleChange}
               required
             >
-              {doctors.map((doctor) => (
-                <MenuItem key={doctor.id} value={doctor.id}>
-                  {doctor.User?.full_name} — {doctor.specialization}
-                </MenuItem>
-              ))}
+              {doctors.length > 0 ? (
+                doctors.map((doctor) => (
+                  <MenuItem key={doctor.id} value={doctor.id}>
+                    {doctor.User?.full_name} — {doctor.specialization || 'Стоматолог'}
+                  </MenuItem>
+                ))
+              ) : (
+                <MenuItem disabled>Врачи не найдены</MenuItem>
+              )}
             </TextField>
 
             <TextField
@@ -112,19 +130,59 @@ const BookAppointment = () => {
               onChange={handleChange}
               required
             >
-              {services.map((service) => (
-                <MenuItem key={service.id} value={service.id}>
-                  {service.name} — {service.price} ₽
-                </MenuItem>
-              ))}
+              {services.length > 0 ? (
+                services.map((service) => (
+                  <MenuItem key={service.id} value={service.id}>
+                    {service.name} — {service.price} ₽
+                  </MenuItem>
+                ))
+              ) : (
+                <MenuItem disabled>Услуги не найдены</MenuItem>
+              )}
             </TextField>
 
-            <TextField name="appointment_date" label="Дата" type="date" fullWidth margin="normal" value={formData.appointment_date} onChange={handleChange} required InputLabelProps={{ shrink: true }} />
-            <TextField name="appointment_time" label="Время" type="time" fullWidth margin="normal" value={formData.appointment_time} onChange={handleChange} required InputLabelProps={{ shrink: true }} />
-            <TextField name="notes" label="Примечание" fullWidth margin="normal" multiline rows={3} value={formData.notes} onChange={handleChange} />
+            <TextField 
+              name="appointment_date" 
+              label="Дата" 
+              type="date" 
+              fullWidth 
+              margin="normal" 
+              value={formData.appointment_date} 
+              onChange={handleChange} 
+              required 
+              InputLabelProps={{ shrink: true }} 
+            />
+            <TextField 
+              name="appointment_time" 
+              label="Время" 
+              type="time" 
+              fullWidth 
+              margin="normal" 
+              value={formData.appointment_time} 
+              onChange={handleChange} 
+              required 
+              InputLabelProps={{ shrink: true }} 
+            />
+            <TextField 
+              name="notes" 
+              label="Примечание (необязательно)" 
+              fullWidth 
+              margin="normal" 
+              multiline 
+              rows={3} 
+              value={formData.notes} 
+              onChange={handleChange} 
+            />
 
-            <Button type="submit" variant="contained" size="large" fullWidth sx={{ mt: 3, py: 1.5 }} disabled={loading}>
-              {loading ? 'Запись...' : 'Записаться'}
+            <Button 
+              type="submit" 
+              variant="contained" 
+              size="large" 
+              fullWidth 
+              sx={{ mt: 3, py: 1.5 }} 
+              disabled={loading || !formData.doctor_id || !formData.service_id}
+            >
+              {loading ? 'Запись...' : 'Записаться на приём'}
             </Button>
           </Box>
         </Paper>
