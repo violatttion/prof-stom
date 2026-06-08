@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   Typography, Paper, Grid, Button, Table, TableBody, TableCell,
   TableContainer, TableHead, TableRow, Alert, TextField, Chip,
-  Dialog, DialogTitle, DialogContent, DialogActions
+  Dialog, DialogTitle, DialogContent, DialogActions, Box, Collapse
 } from '@mui/material';
 import api from '../../api';
 import jsPDF from 'jspdf';
@@ -14,11 +14,20 @@ const PatientCard = () => {
   const [appointments, setAppointments] = useState([]);
   const [teeth, setTeeth] = useState([]);
   const [selectedTooth, setSelectedTooth] = useState(null);
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useState('healthy');
   const [comment, setComment] = useState('');
   const [openDialog, setOpenDialog] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showFormula, setShowFormula] = useState(false);
+
+  const formulaRef = useRef(null);
+
+  // === FDI разметка (правильное расположение) ===
+  const upperRight = [18, 17, 16, 15, 14, 13, 12, 11];
+  const upperLeft  = [21, 22, 23, 24, 25, 26, 27, 28];
+  const lowerRight = [48, 47, 46, 45, 44, 43, 42, 41];
+  const lowerLeft  = [31, 32, 33, 34, 35, 36, 37, 38];
 
   useEffect(() => {
     fetchPatientData();
@@ -26,36 +35,57 @@ const PatientCard = () => {
 
   const fetchPatientData = async () => {
     try {
-      const [patientRes, appointmentsRes, teethRes] = await Promise.all([
-        api.get(`/patients/${id}`),
-        api.get(`/appointments?patientId=${id}`),
-        api.get(`/teeth-formula/patient/${id}`)
-      ]);
-
+      const patientRes = await api.get(`/patients/${id}`);
       setPatient(patientRes.data);
-      setAppointments(appointmentsRes.data || []);
-      setTeeth(teethRes.data || []);
+
+      const appointmentsRes = await api.get(`/appointments?patientId=${id}`);
+      const sorted = (appointmentsRes.data || []).sort((a, b) =>
+        new Date(b.appointment_date) - new Date(a.appointment_date)
+      );
+      setAppointments(sorted);
+
+      // Загружаем зубную формулу только последнего приёма
+      if (sorted.length > 0) {
+        const latestId = sorted[0].id;
+        const teethRes = await api.get(`/teeth-formula/${latestId}`);
+        setTeeth(teethRes.data || []);
+      }
     } catch (err) {
       setError('Не удалось загрузить данные пациента');
     }
   };
 
-  const handleToothClick = (tooth) => {
-    setSelectedTooth(tooth);
-    setStatus(tooth.status || 'healthy');
-    setComment(tooth.comment || '');
+  const getToothData = (number) => {
+    return teeth.find(t => t.tooth_number === number) || {
+      tooth_number: number,
+      status: 'healthy',
+      comment: ''
+    };
+  };
+
+  const handleToothClick = (number) => {
+    // Разрешаем редактирование только для последнего приёма
+    if (appointments.length === 0) return;
+
+    const toothData = getToothData(number);
+    setSelectedTooth(toothData);
+    setStatus(toothData.status || 'healthy');
+    setComment(toothData.comment || '');
     setOpenDialog(true);
   };
 
   const handleSaveTooth = async () => {
-    if (!selectedTooth) return;
+    if (!selectedTooth || appointments.length === 0) return;
+
+    const latestAppointmentId = appointments[0].id;
 
     try {
-      await api.put(`/teeth-formula/${selectedTooth.id}`, {
+      await api.put(`/teeth-formula/${latestAppointmentId}`, {
+        tooth_number: selectedTooth.tooth_number,
         status,
         comment
       });
-      setSuccess('Зуб обновлён');
+      setSuccess('Зуб сохранён');
       setOpenDialog(false);
       fetchPatientData();
     } catch (err) {
@@ -67,24 +97,40 @@ const PatientCard = () => {
     if (!patient) return;
 
     const doc = new jsPDF();
-    doc.setFontSize(16);
+    doc.setFontSize(18);
     doc.text('Карта пациента', 105, 20, { align: 'center' });
-    doc.setFontSize(12);
-    doc.text(`ФИО: ${patient.full_name}`, 20, 40);
-    doc.text(`Телефон: ${patient.User?.phone || '—'}`, 20, 50);
-    doc.text(`Email: ${patient.User?.email || '—'}`, 20, 60);
 
-    let y = 80;
-    doc.text('История посещений:', 20, y);
+    doc.setFontSize(12);
+    doc.text(`ФИО: ${patient.User?.full_name || patient.full_name}`, 20, 35);
+    doc.text(`Телефон: ${patient.User?.phone || patient.phone || '—'}`, 20, 43);
+    doc.text(`Email: ${patient.User?.email || patient.email || '—'}`, 20, 51);
+
+    let y = 65;
+    doc.text('История приёмов:', 20, y);
     y += 10;
 
     appointments.forEach((app, index) => {
-      doc.text(`${index + 1}. ${app.appointment_date} ${app.appointment_time} — ${app.Service?.name || ''}`, 20, y);
-      y += 10;
+      doc.text(`${index + 1}. ${app.appointment_date} | ${app.appointment_time} | ${app.Service?.name || '—'}`, 20, y);
+      y += 8;
     });
 
-    doc.save(`patient_${patient.full_name}.pdf`);
+    y += 10;
+    doc.text('Зубная формула (последний приём):', 20, y);
+    y += 10;
+
+    teeth.forEach((tooth) => {
+      if (tooth.status && tooth.status !== 'healthy') {
+        doc.text(`Зуб №${tooth.tooth_number}: ${tooth.status} ${tooth.comment ? '- ' + tooth.comment : ''}`, 20, y);
+        y += 8;
+      }
+    });
+
+    const fileName = (patient.User?.full_name || patient.full_name || 'patient').replace(/\s+/g, '_');
+    doc.save(`Patient_Card_${fileName}.pdf`);
   };
+
+  if (error) return <Alert severity="error">{error}</Alert>;
+  if (!patient) return <Typography>Загрузка...</Typography>;
 
   return (
     <>
@@ -92,16 +138,15 @@ const PatientCard = () => {
         Карта пациента
       </Typography>
 
-      {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
-      {success && <Alert severity="success" sx={{ mb: 3 }}>{success}</Alert>}
+      {success && <Alert severity="success" sx={{ mb: 3 }} onClose={() => setSuccess('')}>{success}</Alert>}
 
-      {/* Основная информация */}
+      {/* Информация о пациенте */}
       <Paper elevation={4} sx={{ p: 4, borderRadius: 3, mb: 4 }}>
         <Grid container spacing={2}>
           <Grid item xs={12} md={8}>
-            <Typography variant="h5">{patient?.full_name}</Typography>
-            <Typography><strong>Телефон:</strong> {patient?.User?.phone || '—'}</Typography>
-            <Typography><strong>Email:</strong> {patient?.User?.email || '—'}</Typography>
+            <Typography variant="h5">{patient.User?.full_name || patient.full_name}</Typography>
+            <Typography><strong>Телефон:</strong> {patient.User?.phone || patient.phone || '—'}</Typography>
+            <Typography><strong>Email:</strong> {patient.User?.email || patient.email || '—'}</Typography>
           </Grid>
           <Grid item xs={12} md={4} sx={{ textAlign: { md: 'right' } }}>
             <Button variant="contained" onClick={exportToPDF}>
@@ -111,8 +156,8 @@ const PatientCard = () => {
         </Grid>
       </Paper>
 
-      {/* История посещений */}
-      <Typography variant="h6" gutterBottom>История посещений</Typography>
+      {/* История приёмов */}
+      <Typography variant="h6" gutterBottom>История приёмов</Typography>
       <TableContainer component={Paper} elevation={4} sx={{ borderRadius: 3, mb: 4 }}>
         <Table>
           <TableHead>
@@ -129,43 +174,88 @@ const PatientCard = () => {
                 <TableRow key={app.id}>
                   <TableCell>{app.appointment_date}</TableCell>
                   <TableCell>{app.appointment_time}</TableCell>
-                  <TableCell>{app.Service?.name}</TableCell>
+                  <TableCell>{app.Service?.name || '—'}</TableCell>
                   <TableCell>{app.status}</TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={4} align="center">История посещений пуста</TableCell>
+                <TableCell colSpan={4} align="center">Записей пока нет</TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
       </TableContainer>
 
-      {/* Зубная формула */}
-      <Typography variant="h6" gutterBottom>Зубная формула</Typography>
-      <Paper elevation={4} sx={{ p: 3, borderRadius: 3 }}>
-        <Grid container spacing={1}>
-          {teeth.length > 0 ? (
-            teeth.map((tooth) => (
-              <Grid item xs={2} sm={1.5} key={tooth.id}>
-                <Button
-                  variant="outlined"
-                  fullWidth
-                  onClick={() => handleToothClick(tooth)}
-                >
-                  {tooth.tooth_number}
-                </Button>
-              </Grid>
-            ))
-          ) : (
-            <Typography color="text.secondary">Зубная формула пока не заполнена</Typography>
-          )}
-        </Grid>
-      </Paper>
+      {/* Зубная формула (FDI) */}
+      <Box ref={formulaRef}>
+        <Button
+          variant="contained"
+          onClick={() => setShowFormula(!showFormula)}
+          sx={{ mb: 2 }}
+        >
+          {showFormula ? 'Скрыть зубную формулу' : 'Показать зубную формулу'}
+        </Button>
+
+        <Collapse in={showFormula}>
+          <Typography variant="h6" gutterBottom>Зубная формула (FDI)</Typography>
+
+          <Paper elevation={4} sx={{ p: 3, borderRadius: 3 }}>
+            {/* Верхняя челюсть */}
+            <Typography variant="subtitle2" sx={{ mb: 1, color: '#1565c0' }}>
+              Верхняя челюсть
+            </Typography>
+            <Grid container spacing={0.5} sx={{ mb: 3 }}>
+              {[...upperRight, ...upperLeft].map((num) => {
+                const tooth = getToothData(num);
+                return (
+                  <Grid item xs={1.5} key={num}>
+                    <Button
+                      variant="outlined"
+                      fullWidth
+                      onClick={() => handleToothClick(num)}
+                      sx={{ minHeight: 52, fontWeight: 600 }}
+                    >
+                      {num}
+                      {tooth.status && tooth.status !== 'healthy' && (
+                        <Chip label={tooth.status} color="primary" size="small" sx={{ ml: 0.5, fontSize: '0.6rem' }} />
+                      )}
+                    </Button>
+                  </Grid>
+                );
+              })}
+            </Grid>
+
+            {/* Нижняя челюсть */}
+            <Typography variant="subtitle2" sx={{ mb: 1, color: '#1565c0' }}>
+              Нижняя челюсть
+            </Typography>
+            <Grid container spacing={0.5}>
+              {[...lowerRight, ...lowerLeft].map((num) => {
+                const tooth = getToothData(num);
+                return (
+                  <Grid item xs={1.5} key={num}>
+                    <Button
+                      variant="outlined"
+                      fullWidth
+                      onClick={() => handleToothClick(num)}
+                      sx={{ minHeight: 52, fontWeight: 600 }}
+                    >
+                      {num}
+                      {tooth.status && tooth.status !== 'healthy' && (
+                        <Chip label={tooth.status} color="primary" size="small" sx={{ ml: 0.5, fontSize: '0.6rem' }} />
+                      )}
+                    </Button>
+                  </Grid>
+                );
+              })}
+            </Grid>
+          </Paper>
+        </Collapse>
+      </Box>
 
       {/* Диалог редактирования зуба */}
-      <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+      <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Зуб №{selectedTooth?.tooth_number}</DialogTitle>
         <DialogContent>
           <TextField
@@ -175,14 +265,16 @@ const PatientCard = () => {
             margin="normal"
             value={status}
             onChange={(e) => setStatus(e.target.value)}
+            SelectProps={{ native: true }}
           >
             <option value="healthy">Здоров</option>
             <option value="caries">Кариес</option>
+            <option value="filling">Пломба</option>
             <option value="extracted">Удалён</option>
             <option value="implant">Имплант</option>
             <option value="crown">Коронка</option>
+            <option value="root_canal">Лечение каналов</option>
           </TextField>
-
           <TextField
             label="Комментарий"
             fullWidth

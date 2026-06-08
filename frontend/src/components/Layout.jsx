@@ -1,3 +1,4 @@
+// frontend/src/components/Layout.jsx
 import React from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import {
@@ -48,7 +49,7 @@ const Layout = () => {
   const menuItems = getMenuItems();
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box sx={{ display: 'flex', backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
       {/* Верхняя панель */}
       <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
         <Toolbar>
@@ -67,7 +68,11 @@ const Layout = () => {
         sx={{
           width: drawerWidth,
           flexShrink: 0,
-          [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box' },
+          [`& .MuiDrawer-paper`]: { 
+            width: drawerWidth, 
+            boxSizing: 'border-box',
+            backgroundColor: '#fff'
+          },
         }}
       >
         <Toolbar />
@@ -86,7 +91,15 @@ const Layout = () => {
       </Drawer>
 
       {/* Основной контент */}
-      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+      <Box 
+        component="main" 
+        sx={{ 
+          flexGrow: 1, 
+          p: 3, 
+          backgroundColor: '#f5f5f5',
+          minHeight: '100vh'
+        }}
+      >
         <Toolbar />
         <Outlet />
       </Box>

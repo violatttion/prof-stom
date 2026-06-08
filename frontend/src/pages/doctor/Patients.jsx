@@ -24,11 +24,16 @@ const DoctorPatients = () => {
     }
   };
 
-  const filteredPatients = patients.filter(p =>
-    p.full_name?.toLowerCase().includes(search.toLowerCase()) ||
-    p.User?.phone?.includes(search) ||
-    p.User?.email?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredPatients = patients.filter(p => {
+    const fullName = p.User?.full_name || p.full_name || '';
+    const phone = p.User?.phone || p.phone || '';
+    const email = p.User?.email || p.email || '';
+    const s = search.toLowerCase();
+
+    return fullName.toLowerCase().includes(s) ||
+           phone.includes(search) ||
+           email.toLowerCase().includes(s);
+  });
 
   return (
     <>
@@ -58,9 +63,9 @@ const DoctorPatients = () => {
             {filteredPatients.length > 0 ? (
               filteredPatients.map((patient) => (
                 <TableRow key={patient.id} hover>
-                  <TableCell>{patient.full_name}</TableCell>
-                  <TableCell>{patient.User?.phone || '—'}</TableCell>
-                  <TableCell>{patient.User?.email || '—'}</TableCell>
+                  <TableCell>{patient.User?.full_name || patient.full_name || '—'}</TableCell>
+                  <TableCell>{patient.User?.phone || patient.phone || '—'}</TableCell>
+                  <TableCell>{patient.User?.email || patient.email || '—'}</TableCell>
                   <TableCell align="center">
                     <Button
                       variant="outlined"
