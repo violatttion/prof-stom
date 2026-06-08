@@ -39,7 +39,6 @@ const BookAppointment = () => {
       setDoctors(doctorsRes.data || []);
       setServices(servicesRes.data || []);
     } catch (err) {
-      console.error('Ошибка загрузки данных для записи:', err);
       setError('Не удалось загрузить список врачей и услуг');
     } finally {
       setInitialLoading(false);
@@ -64,7 +63,7 @@ const BookAppointment = () => {
         appointment_time: formData.appointment_time,
         notes: formData.notes
       });
-      setSuccess('Запись успешно создана! Мы свяжемся с вами для подтверждения.');
+      setSuccess('Запись успешно создана!');
       setFormData({
         doctor_id: preselectedDoctorId || '',
         service_id: preselectedServiceId || '',
@@ -109,15 +108,11 @@ const BookAppointment = () => {
               onChange={handleChange}
               required
             >
-              {doctors.length > 0 ? (
-                doctors.map((doctor) => (
-                  <MenuItem key={doctor.id} value={doctor.id}>
-                    {doctor.User?.full_name} — {doctor.specialization || 'Стоматолог'}
-                  </MenuItem>
-                ))
-              ) : (
-                <MenuItem disabled>Врачи не найдены</MenuItem>
-              )}
+              {doctors.map((doctor) => (
+                <MenuItem key={doctor.id} value={doctor.id}>
+                  {doctor.User?.full_name} — {doctor.specialization || 'Стоматолог'}
+                </MenuItem>
+              ))}
             </TextField>
 
             <TextField
@@ -130,58 +125,18 @@ const BookAppointment = () => {
               onChange={handleChange}
               required
             >
-              {services.length > 0 ? (
-                services.map((service) => (
-                  <MenuItem key={service.id} value={service.id}>
-                    {service.name} — {service.price} ₽
-                  </MenuItem>
-                ))
-              ) : (
-                <MenuItem disabled>Услуги не найдены</MenuItem>
-              )}
+              {services.map((service) => (
+                <MenuItem key={service.id} value={service.id}>
+                  {service.name} — {service.price} ₽
+                </MenuItem>
+              ))}
             </TextField>
 
-            <TextField 
-              name="appointment_date" 
-              label="Дата" 
-              type="date" 
-              fullWidth 
-              margin="normal" 
-              value={formData.appointment_date} 
-              onChange={handleChange} 
-              required 
-              InputLabelProps={{ shrink: true }} 
-            />
-            <TextField 
-              name="appointment_time" 
-              label="Время" 
-              type="time" 
-              fullWidth 
-              margin="normal" 
-              value={formData.appointment_time} 
-              onChange={handleChange} 
-              required 
-              InputLabelProps={{ shrink: true }} 
-            />
-            <TextField 
-              name="notes" 
-              label="Примечание (необязательно)" 
-              fullWidth 
-              margin="normal" 
-              multiline 
-              rows={3} 
-              value={formData.notes} 
-              onChange={handleChange} 
-            />
+            <TextField name="appointment_date" label="Дата" type="date" fullWidth margin="normal" value={formData.appointment_date} onChange={handleChange} required InputLabelProps={{ shrink: true }} />
+            <TextField name="appointment_time" label="Время" type="time" fullWidth margin="normal" value={formData.appointment_time} onChange={handleChange} required InputLabelProps={{ shrink: true }} />
+            <TextField name="notes" label="Примечание" fullWidth margin="normal" multiline rows={3} value={formData.notes} onChange={handleChange} />
 
-            <Button 
-              type="submit" 
-              variant="contained" 
-              size="large" 
-              fullWidth 
-              sx={{ mt: 3, py: 1.5 }} 
-              disabled={loading || !formData.doctor_id || !formData.service_id}
-            >
+            <Button type="submit" variant="contained" size="large" fullWidth sx={{ mt: 3, py: 1.5 }} disabled={loading || !formData.doctor_id || !formData.service_id}>
               {loading ? 'Запись...' : 'Записаться на приём'}
             </Button>
           </Box>
