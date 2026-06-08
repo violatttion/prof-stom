@@ -1,17 +1,16 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Paper, TextField, Button, Typography, Box, Alert, MenuItem } from '@mui/material';
+import { Paper, TextField, Button, Typography, Box, Alert } from '@mui/material';
 import AnimatedBackground from '../../components/AnimatedBackground';
 import MouseTrail from '../../components/MouseTrail';
-import api from '../../api'; // ← важно
+import api from '../../api';
 
 const Register = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     fullName: '',
-    phone: '',
-    role: 'patient'
+    phone: ''
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -27,15 +26,14 @@ const Register = () => {
     setLoading(true);
 
     try {
-      const res = await api.post('/auth/register', {
+      await api.post('/auth/register', {
         email: formData.email,
         password: formData.password,
         fullName: formData.fullName,
         phone: formData.phone,
-        role: formData.role
+        role: 'patient'        // ← Всегда только пациент
       });
 
-      // Если регистрация прошла успешно — редиректим на логин
       navigate('/login');
     } catch (err) {
       setError(err.response?.data?.error || 'Ошибка при регистрации');
@@ -59,7 +57,7 @@ const Register = () => {
       }}>
         <Paper elevation={12} sx={{ p: 5, borderRadius: 5, maxWidth: 480, width: '100%', mx: 2 }}>
           <Typography variant="h4" align="center" gutterBottom sx={{ color: '#0d47a1', fontWeight: 700 }}>
-            Регистрация
+            Регистрация пациента
           </Typography>
 
           {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
@@ -98,19 +96,6 @@ const Register = () => {
               required 
               onChange={handleChange} 
             />
-
-            <TextField
-              select
-              name="role"
-              label="Роль"
-              fullWidth
-              margin="normal"
-              value={formData.role}
-              onChange={handleChange}
-            >
-              <MenuItem value="patient">Пациент</MenuItem>
-              <MenuItem value="doctor">Врач</MenuItem>
-            </TextField>
 
             <Button 
               type="submit" 

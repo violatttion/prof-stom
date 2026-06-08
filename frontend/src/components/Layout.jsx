@@ -1,4 +1,3 @@
-// frontend/src/components/Layout.jsx
 import React from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import {
@@ -6,7 +5,7 @@ import {
   AppBar, Toolbar, Typography, Button
 } from '@mui/material';
 import {
-  Dashboard, People, CalendarMonth, MedicalServices, Logout, Person
+  Dashboard, People, CalendarMonth, MedicalServices, Logout, Person, Group
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 
@@ -27,6 +26,7 @@ const Layout = () => {
         { text: 'Дашборд', icon: <Dashboard />, path: '/admin' },
         { text: 'Календарь', icon: <CalendarMonth />, path: '/admin/calendar' },
         { text: 'Пациенты', icon: <People />, path: '/admin/patients' },
+        { text: 'Сотрудники', icon: <Group />, path: '/admin/staff' },
         { text: 'Услуги', icon: <MedicalServices />, path: '/admin/services' },
       ];
     } 
@@ -50,7 +50,6 @@ const Layout = () => {
 
   return (
     <Box sx={{ display: 'flex', backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
-      {/* Верхняя панель */}
       <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
         <Toolbar>
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
@@ -62,7 +61,6 @@ const Layout = () => {
         </Toolbar>
       </AppBar>
 
-      {/* Боковое меню */}
       <Drawer
         variant="permanent"
         sx={{
@@ -90,7 +88,6 @@ const Layout = () => {
         </Box>
       </Drawer>
 
-      {/* Основной контент */}
       <Box 
         component="main" 
         sx={{ 

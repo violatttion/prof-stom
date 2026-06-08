@@ -21,6 +21,7 @@ import AdminDashboard from './pages/admin/Dashboard';
 import AdminPatients from './pages/admin/Patients';
 import AdminCalendar from './pages/admin/Calendar';
 import AdminServices from './pages/admin/Services';
+import AdminStaff from './pages/admin/Staff';
 
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
@@ -32,7 +33,6 @@ function App() {
     <AuthProvider>
       <Router>
         <Routes>
-          {/* Публичные */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 
@@ -57,10 +57,12 @@ function App() {
             <Route path="/admin/patients" element={<AdminPatients />} />
             <Route path="/admin/calendar" element={<AdminCalendar />} />
             <Route path="/admin/services" element={<AdminServices />} />
+            <Route path="/admin/staff" element={<AdminStaff />} />
+            
+            {/* Администратор может открывать карты пациентов */}
+            <Route path="/admin/patient/:id" element={<PatientCard />} />
           </Route>
 
-          {/* Редирект */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </Router>

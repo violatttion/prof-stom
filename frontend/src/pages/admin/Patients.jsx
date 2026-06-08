@@ -88,7 +88,7 @@ const AdminPatients = () => {
                       variant="outlined"
                       size="small"
                       sx={{ mr: 1 }}
-                      onClick={() => navigate(`/doctor/patient/${patient.id}`)}
+                      onClick={() => navigate(`/admin/patient/${patient.id}`)}
                     >
                       Карта пациента
                     </Button>
