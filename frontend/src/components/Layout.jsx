@@ -8,7 +8,6 @@ import {
   Dashboard, People, CalendarMonth, MedicalServices, Logout, Person
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
-import PageLayout from './PageLayout';
 
 const drawerWidth = 240;
 
@@ -40,7 +39,7 @@ const Layout = () => {
       // Пациент
       return [
         { text: 'Главная', icon: <Dashboard />, path: '/patient' },
-        { text: 'Врачи', icon: <Person />, path: '/patient/doctors' },     // ← добавлено
+        { text: 'Врачи', icon: <Person />, path: '/patient/doctors' },
         { text: 'Записаться', icon: <CalendarMonth />, path: '/patient/book' },
         { text: 'Мои записи', icon: <People />, path: '/patient/appointments' },
       ];
@@ -90,9 +89,7 @@ const Layout = () => {
       {/* Основной контент */}
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <Toolbar />
-        <PageLayout>
-          <Outlet />
-        </PageLayout>
+        <Outlet />
       </Box>
     </Box>
   );
