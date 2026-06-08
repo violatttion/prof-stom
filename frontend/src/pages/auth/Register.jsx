@@ -25,13 +25,19 @@ const Register = () => {
     setError('');
     setLoading(true);
 
+    if (!formData.phone) {
+      setError('Номер телефона обязателен');
+      setLoading(false);
+      return;
+    }
+
     try {
       await api.post('/auth/register', {
         email: formData.email,
         password: formData.password,
         fullName: formData.fullName,
         phone: formData.phone,
-        role: 'patient'        // ← Всегда только пациент
+        role: 'patient'
       });
 
       navigate('/login');
@@ -63,39 +69,10 @@ const Register = () => {
           {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
 
           <Box component="form" onSubmit={handleSubmit}>
-            <TextField 
-              name="fullName" 
-              label="ФИО" 
-              fullWidth 
-              margin="normal" 
-              required 
-              onChange={handleChange} 
-            />
-            <TextField 
-              name="email" 
-              label="Email" 
-              type="email" 
-              fullWidth 
-              margin="normal" 
-              required 
-              onChange={handleChange} 
-            />
-            <TextField 
-              name="phone" 
-              label="Телефон" 
-              fullWidth 
-              margin="normal" 
-              onChange={handleChange} 
-            />
-            <TextField 
-              name="password" 
-              label="Пароль" 
-              type="password" 
-              fullWidth 
-              margin="normal" 
-              required 
-              onChange={handleChange} 
-            />
+            <TextField name="fullName" label="ФИО" fullWidth margin="normal" required onChange={handleChange} />
+            <TextField name="email" label="Email" type="email" fullWidth margin="normal" required onChange={handleChange} />
+            <TextField name="phone" label="Телефон" fullWidth margin="normal" required onChange={handleChange} />
+            <TextField name="password" label="Пароль" type="password" fullWidth margin="normal" required onChange={handleChange} />
 
             <Button 
               type="submit" 

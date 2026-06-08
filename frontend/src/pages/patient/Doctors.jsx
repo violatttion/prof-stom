@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Typography, Paper, Grid, Card, CardContent, CardActions,
+  Typography, Grid, Card, CardContent, CardActions,
   Button, TextField, CircularProgress
 } from '@mui/material';
 import api from '../../api';
@@ -32,9 +32,7 @@ const PatientDoctors = () => {
     return fullName.toLowerCase().includes(s) || specialization.toLowerCase().includes(s);
   });
 
-  if (loading) {
-    return <CircularProgress />;
-  }
+  if (loading) return <CircularProgress />;
 
   return (
     <>
@@ -64,7 +62,7 @@ const PatientDoctors = () => {
                     <strong>Телефон:</strong> {doctor.User?.phone || 'Не указан'}
                   </Typography>
                   <Typography variant="body2">
-                    <strong>Кабинет:</strong> {doctor.cabinet || '—'}
+                    <strong>Кабинет:</strong> {doctor.cabinet || 'Основной'}
                   </Typography>
                 </CardContent>
                 <CardActions>

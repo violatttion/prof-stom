@@ -26,8 +26,17 @@ const AdminStaff = () => {
 
   const fetchStaff = async () => {
     try {
-      const res = await api.get('/users?role=doctor,admin');
-      setStaff(res.data || []);
+      // Загружаем врачей (основной список сотрудников)
+      const doctorsRes = await api.get('/doctors');
+      const doctors = (doctorsRes.data || []).map(d => ({
+        ...d.User,
+        id: d.id,
+        role: 'doctor',
+        specialization: d.specialization,
+        cabinet: d.cabinet
+      }));
+
+      setStaff(doctors);
     } catch (err) {
       setError('Не удалось загрузить список сотрудников');
     }
@@ -97,7 +106,7 @@ const AdminStaff = () => {
               <TableCell><strong>Email</strong></TableCell>
               <TableCell><strong>Телефон</strong></TableCell>
               <TableCell><strong>Роль</strong></TableCell>
-              <TableCell><strong>Специализация</strong></TableCell>
+              <TableCell><strong>Специализация / Кабинет</strong></TableCell>
               <TableCell align="center"><strong>Действия</strong></TableCell>
             </TableRow>
           </TableHead>
@@ -109,7 +118,7 @@ const AdminStaff = () => {
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{user.phone || '—'}</TableCell>
                   <TableCell>{user.role === 'doctor' ? 'Врач' : 'Администратор'}</TableCell>
-                  <TableCell>{user.Doctor?.specialization || '—'}</TableCell>
+                  <TableCell>{user.specialization || user.cabinet || '—'}</TableCell>
                   <TableCell align="center">
                     <Button
                       variant="outlined"
@@ -135,43 +144,10 @@ const AdminStaff = () => {
       <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Добавить нового сотрудника</DialogTitle>
         <DialogContent>
-          <TextField
-            name="fullName"
-            label="ФИО"
-            fullWidth
-            margin="normal"
-            value={formData.fullName}
-            onChange={handleChange}
-            required
-          />
-          <TextField
-            name="email"
-            label="Email"
-            type="email"
-            fullWidth
-            margin="normal"
-            value={formData.email}
-            onChange={handleChange}
-            required
-          />
-          <TextField
-            name="password"
-            label="Пароль"
-            type="password"
-            fullWidth
-            margin="normal"
-            value={formData.password}
-            onChange={handleChange}
-            required
-          />
-          <TextField
-            name="phone"
-            label="Телефон"
-            fullWidth
-            margin="normal"
-            value={formData.phone}
-            onChange={handleChange}
-          />
+          <TextField name="fullName" label="ФИО" fullWidth margin="normal" value={formData.fullName} onChange={handleChange} required />
+          <TextField name="email" label="Email" type="email" fullWidth margin="normal" value={formData.email} onChange={handleChange} required />
+          <TextField name="password" label="Пароль" type="password" fullWidth margin="normal" value={formData.password} onChange={handleChange} required />
+          <TextField name="phone" label="Телефон" fullWidth margin="normal" value={formData.phone} onChange={handleChange} />
 
           <TextField
             select

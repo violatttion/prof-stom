@@ -7,13 +7,14 @@ import api from '../../api';
 
 const BookAppointment = () => {
   const [searchParams] = useSearchParams();
+  const preselectedServiceId = searchParams.get('serviceId');
   const preselectedDoctorId = searchParams.get('doctorId');
 
   const [doctors, setDoctors] = useState([]);
   const [services, setServices] = useState([]);
   const [formData, setFormData] = useState({
     doctor_id: preselectedDoctorId || '',
-    service_id: '',
+    service_id: preselectedServiceId || '',
     appointment_date: '',
     appointment_time: '',
     notes: ''
@@ -58,7 +59,13 @@ const BookAppointment = () => {
         notes: formData.notes
       });
       setSuccess('Запись успешно создана!');
-      setFormData({ doctor_id: '', service_id: '', appointment_date: '', appointment_time: '', notes: '' });
+      setFormData({
+        doctor_id: preselectedDoctorId || '',
+        service_id: preselectedServiceId || '',
+        appointment_date: '',
+        appointment_time: '',
+        notes: ''
+      });
     } catch (err) {
       setError(err.response?.data?.error || 'Ошибка при создании записи');
     } finally {

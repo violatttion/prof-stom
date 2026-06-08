@@ -33,13 +33,9 @@ const PatientDashboard = () => {
     s.name.toLowerCase().includes(search.toLowerCase())
   );
 
+  // При клике на услугу — сразу переходим в форму записи с выбранной услугой
   const handleBookService = (serviceId) => {
     navigate(`/patient/book?serviceId=${serviceId}`);
-  };
-
-  const handleAppointmentClick = (appointmentId) => {
-    // Можно открыть модалку или перейти на страницу деталей
-    navigate(`/patient/appointments`); // или сделать отдельную страницу деталей
   };
 
   return (
@@ -57,11 +53,7 @@ const PatientDashboard = () => {
             <Typography variant="h6" gutterBottom>Мои записи</Typography>
             {myAppointments.length > 0 ? (
               myAppointments.slice(0, 6).map((app) => (
-                <Card 
-                  key={app.id} 
-                  sx={{ mb: 2, cursor: 'pointer' }}
-                  onClick={() => handleAppointmentClick(app.id)}
-                >
+                <Card key={app.id} sx={{ mb: 2 }}>
                   <CardContent>
                     <Typography><strong>{app.appointment_date} в {app.appointment_time}</strong></Typography>
                     <Typography color="text.secondary">
@@ -96,7 +88,7 @@ const PatientDashboard = () => {
             />
 
             {filteredServices.length > 0 ? (
-              filteredServices.slice(0, 6).map((service) => (
+              filteredServices.slice(0, 8).map((service) => (
                 <Card key={service.id} sx={{ mb: 2 }}>
                   <CardContent>
                     <Typography variant="subtitle1">{service.name}</Typography>
