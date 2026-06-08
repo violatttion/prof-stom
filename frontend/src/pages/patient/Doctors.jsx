@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Typography, Paper, Grid, Card, CardContent, CardActions,
-  Button, Avatar, TextField, CircularProgress
+  Button, TextField, CircularProgress
 } from '@mui/material';
 import api from '../../api';
 
@@ -56,31 +56,17 @@ const PatientDoctors = () => {
             <Grid item xs={12} sm={6} md={4} key={doctor.id}>
               <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                 <CardContent sx={{ flexGrow: 1 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                    <Avatar 
-                      sx={{ width: 64, height: 64, mr: 2 }}
-                      src={doctor.photo || '/default-doctor.png'}
-                    >
-                      {doctor.User?.full_name?.[0] || 'В'}
-                    </Avatar>
-                    <Box>
-                      <Typography variant="h6">
-                        {doctor.User?.full_name || 'Врач'}
-                      </Typography>
-                      <Typography color="text.secondary">
-                        {doctor.specialization}
-                      </Typography>
-                    </Box>
-                  </Box>
-
-                  <Typography variant="body2" sx={{ mb: 1 }}>
+                  <Typography variant="h6">{doctor.User?.full_name || 'Врач'}</Typography>
+                  <Typography color="text.secondary" gutterBottom>
+                    {doctor.specialization}
+                  </Typography>
+                  <Typography variant="body2">
                     <strong>Телефон:</strong> {doctor.User?.phone || 'Не указан'}
                   </Typography>
                   <Typography variant="body2">
                     <strong>Кабинет:</strong> {doctor.cabinet || '—'}
                   </Typography>
                 </CardContent>
-
                 <CardActions>
                   <Button 
                     size="small" 
@@ -95,9 +81,7 @@ const PatientDoctors = () => {
           ))
         ) : (
           <Grid item xs={12}>
-            <Typography align="center" color="text.secondary">
-              Врачи не найдены
-            </Typography>
+            <Typography align="center" color="text.secondary">Врачи не найдены</Typography>
           </Grid>
         )}
       </Grid>

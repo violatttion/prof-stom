@@ -3,6 +3,7 @@ import {
   Typography, Paper, TextField, Table, TableBody, TableCell,
   TableContainer, TableHead, TableRow, Button, Alert
 } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import api from '../../api';
 
 const AdminPatients = () => {
@@ -10,6 +11,7 @@ const AdminPatients = () => {
   const [search, setSearch] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchPatients();
@@ -86,9 +88,9 @@ const AdminPatients = () => {
                       variant="outlined"
                       size="small"
                       sx={{ mr: 1 }}
-                      onClick={() => window.location.href = `/doctor/patient/${patient.id}`}
+                      onClick={() => navigate(`/doctor/patient/${patient.id}`)}
                     >
-                      Карта
+                      Карта пациента
                     </Button>
                     <Button
                       variant="outlined"
@@ -103,9 +105,7 @@ const AdminPatients = () => {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={4} align="center">
-                  Пациенты не найдены
-                </TableCell>
+                <TableCell colSpan={4} align="center">Пациенты не найдены</TableCell>
               </TableRow>
             )}
           </TableBody>

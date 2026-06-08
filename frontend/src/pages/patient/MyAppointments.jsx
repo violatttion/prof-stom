@@ -17,7 +17,7 @@ const MyAppointments = () => {
   const fetchAppointments = async () => {
     try {
       const res = await api.get('/appointments/my');
-      setAppointments(res.data);
+      setAppointments(res.data || []);
     } catch (err) {
       setError('Не удалось загрузить записи');
     }
@@ -69,13 +69,13 @@ const MyAppointments = () => {
                 <TableRow key={app.id}>
                   <TableCell>{app.appointment_date}</TableCell>
                   <TableCell>{app.appointment_time}</TableCell>
-                  <TableCell>{app.Doctor?.User?.full_name}</TableCell>
-                  <TableCell>{app.Service?.name}</TableCell>
+                  <TableCell>{app.Doctor?.User?.full_name || '—'}</TableCell>
+                  <TableCell>{app.Service?.name || (app.Services && app.Services[0]?.name) || '—'}</TableCell>
                   <TableCell align="center">
                     <Chip label={app.status} color={getStatusColor(app.status)} size="small" />
                   </TableCell>
                   <TableCell align="center">
-                    {app.status === 'pending' && (
+                    {(app.status === 'pending' || app.status === 'confirmed') && (
                       <Button
                         variant="outlined"
                         color="error"
