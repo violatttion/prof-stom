@@ -3,7 +3,6 @@ import {
   Typography, Paper, Grid, Card, CardContent, Button, Box
 } from '@mui/material';
 import { Link } from 'react-router-dom';
-import PageLayout from '../../components/PageLayout';
 import api from '../../api';
 
 const AdminDashboard = () => {
@@ -42,7 +41,7 @@ const AdminDashboard = () => {
   };
 
   return (
-    <PageLayout>
+    <>
       <Typography variant="h4" gutterBottom sx={{ color: '#0d47a1', fontWeight: 700, mb: 4 }}>
         Панель администратора
       </Typography>
@@ -139,7 +138,7 @@ const AdminDashboard = () => {
           </Paper>
         </Grid>
       </Grid>
-    </PageLayout>
+    </>
   );
 };
 

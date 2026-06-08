@@ -3,7 +3,6 @@ import {
   Typography, Paper, Grid, Card, CardContent, Button, TextField, Chip, Alert
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import PageLayout from '../../components/PageLayout';
 import api from '../../api';
 
 const PatientDashboard = () => {
@@ -44,7 +43,7 @@ const PatientDashboard = () => {
   };
 
   return (
-    <PageLayout>
+    <>
       <Typography variant="h4" gutterBottom sx={{ color: '#0d47a1', fontWeight: 700, mb: 4 }}>
         Добро пожаловать в ПРОФ СТОМ
       </Typography>
@@ -119,7 +118,7 @@ const PatientDashboard = () => {
           </Paper>
         </Grid>
       </Grid>
-    </PageLayout>
+    </>
   );
 };
 

@@ -2,7 +2,7 @@ import React from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import {
   Box, Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText,
-  AppBar, Toolbar, Typography, IconButton, Button
+  AppBar, Toolbar, Typography, Button
 } from '@mui/material';
 import {
   Dashboard, People, CalendarMonth, MedicalServices, Logout, Person
@@ -36,7 +36,6 @@ const Layout = () => {
       ];
     } 
     else {
-      // Пациент
       return [
         { text: 'Главная', icon: <Dashboard />, path: '/patient' },
         { text: 'Врачи', icon: <Person />, path: '/patient/doctors' },

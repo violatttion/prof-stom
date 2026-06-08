@@ -3,7 +3,6 @@ import {
   Typography, Paper, Grid, Card, CardContent, CardActions,
   Button, Avatar, TextField, CircularProgress
 } from '@mui/material';
-import PageLayout from '../../components/PageLayout';
 import api from '../../api';
 
 const PatientDoctors = () => {
@@ -34,15 +33,11 @@ const PatientDoctors = () => {
   });
 
   if (loading) {
-    return (
-      <PageLayout>
-        <CircularProgress />
-      </PageLayout>
-    );
+    return <CircularProgress />;
   }
 
   return (
-    <PageLayout>
+    <>
       <Typography variant="h4" gutterBottom sx={{ color: '#0d47a1', fontWeight: 700, mb: 4 }}>
         Наши врачи
       </Typography>
@@ -64,7 +59,7 @@ const PatientDoctors = () => {
                   <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                     <Avatar 
                       sx={{ width: 64, height: 64, mr: 2 }}
-                      src={doctor.photo || '/default-doctor.png'} // можно добавить фото позже
+                      src={doctor.photo || '/default-doctor.png'}
                     >
                       {doctor.User?.full_name?.[0] || 'В'}
                     </Avatar>
@@ -106,7 +101,7 @@ const PatientDoctors = () => {
           </Grid>
         )}
       </Grid>
-    </PageLayout>
+    </>
   );
 };
 

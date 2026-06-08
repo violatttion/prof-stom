@@ -1,5 +1,6 @@
 const { Appointment, Patient, Doctor, Service, User } = require('../models');
 const { Op } = require('sequelize');
+const nodemailer = require('nodemailer');
 
 class AppointmentController {
   async getAll(req, res) {
@@ -94,6 +95,60 @@ class AppointmentController {
     }
   }
 
+  // Функция отправки email при подтверждении записи
+  async sendConfirmationEmail(appointment) {
+    try {
+      const patient = await Patient.findByPk(appointment.patient_id, {
+        include: [{ model: User }]
+      });
+
+      if (!patient || !patient.User?.email) {
+        console.log('Email пациента не найден');
+        return;
+      }
+
+      const doctor = await Doctor.findByPk(appointment.doctor_id, {
+        include: [{ model: User }]
+      });
+
+      const transporter = nodemailer.createTransport({
+        host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+        port: process.env.EMAIL_PORT || 587,
+        secure: false,
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS
+        }
+      });
+
+      const mailOptions = {
+        from: `"Проф Стом" <${process.env.EMAIL_USER}>`,
+        to: patient.User.email,
+        subject: 'Ваша запись подтверждена',
+        html: `
+          <h2>Здравствуйте, ${patient.User.full_name}!</h2>
+          <p>Ваша запись в клинику <strong>Проф Стом</strong> была подтверждена.</p>
+          
+          <h3>Детали записи:</h3>
+          <ul>
+            <li><strong>Дата:</strong> ${appointment.appointment_date}</li>
+            <li><strong>Время:</strong> ${appointment.appointment_time}</li>
+            <li><strong>Врач:</strong> ${doctor?.User?.full_name || '—'}</li>
+            <li><strong>Статус:</strong> Подтверждена</li>
+          </ul>
+
+          <p>Ждём вас в назначенное время!</p>
+          <p>С уважением,<br>Команда Проф Стом</p>
+        `
+      };
+
+      await transporter.sendMail(mailOptions);
+      console.log(`Письмо отправлено пациенту: ${patient.User.email}`);
+    } catch (error) {
+      console.error('Ошибка отправки email:', error);
+    }
+  }
+
   async updateStatus(req, res) {
     try {
       const { id } = req.params;
@@ -104,9 +159,15 @@ class AppointmentController {
         return res.status(404).json({ error: 'Запись не найдена' });
       }
 
+      const previousStatus = appointment.status;
       appointment.status = status;
       if (cancellation_reason) appointment.cancellation_reason = cancellation_reason;
       await appointment.save();
+
+      // Отправляем email, если статус изменился на confirmed
+      if (status === 'confirmed' && previousStatus !== 'confirmed') {
+        await sendConfirmationEmail(appointment);
+      }
 
       const io = req.app.get('io');
       if (io) {

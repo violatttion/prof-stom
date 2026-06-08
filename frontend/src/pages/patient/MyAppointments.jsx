@@ -3,7 +3,6 @@ import {
   Typography, Paper, Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, Chip, Button, Alert
 } from '@mui/material';
-import PageLayout from '../../components/PageLayout';
 import api from '../../api';
 
 const MyAppointments = () => {
@@ -44,7 +43,7 @@ const MyAppointments = () => {
   };
 
   return (
-    <PageLayout>
+    <>
       <Typography variant="h4" gutterBottom sx={{ color: '#0d47a1', fontWeight: 700, mb: 4 }}>
         Мои записи
       </Typography>
@@ -97,7 +96,7 @@ const MyAppointments = () => {
           </TableBody>
         </Table>
       </TableContainer>
-    </PageLayout>
+    </>
   );
 };
 
