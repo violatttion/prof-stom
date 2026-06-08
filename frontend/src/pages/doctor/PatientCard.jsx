@@ -50,7 +50,11 @@ const PatientCard = () => {
 
   const formulaRef = useRef(null);
 
-  const allTeethNumbers = Array.from({ length: 32 }, (_, i) => i + 1);
+  // === FDI разметка (правильное расположение) ===
+  const upperRight = [18, 17, 16, 15, 14, 13, 12, 11];
+  const upperLeft  = [21, 22, 23, 24, 25, 26, 27, 28];
+  const lowerRight = [48, 47, 46, 45, 44, 43, 42, 41];
+  const lowerLeft  = [31, 32, 33, 34, 35, 36, 37, 38];
 
   useEffect(() => {
     fetchPatientData();
@@ -262,7 +266,7 @@ const PatientCard = () => {
         </Table>
       </TableContainer>
 
-      {/* ЗУБНАЯ ФОРМУЛА С РАСКРЫТИЕМ */}
+      {/* ==================== ЗУБНАЯ ФОРМУЛА (FDI) ==================== */}
       <Box ref={formulaRef}>
         <Button
           variant="contained"
@@ -273,22 +277,52 @@ const PatientCard = () => {
         </Button>
 
         <Collapse in={showFormula}>
-          <Typography variant="h6" gutterBottom>Зубная формула (последний приём)</Typography>
-          <Paper elevation={4} sx={{ p: 3, borderRadius: 3, mb: 4 }}>
-            <Grid container spacing={1}>
-              {allTeethNumbers.map((num) => {
+          <Typography variant="h6" gutterBottom>Зубная формула (FDI)</Typography>
+
+          <Paper elevation={4} sx={{ p: 3, borderRadius: 3 }}>
+            {/* Верхняя челюсть */}
+            <Typography variant="subtitle2" sx={{ mb: 1, color: '#1565c0' }}>
+              Верхняя челюсть
+            </Typography>
+            <Grid container spacing={0.5} sx={{ mb: 3 }}>
+              {[...upperRight, ...upperLeft].map((num) => {
                 const tooth = getToothData(num);
                 return (
-                  <Grid item xs={2} sm={1.5} key={num}>
+                  <Grid item xs={1.5} key={num}>
                     <Button
                       variant="outlined"
                       fullWidth
                       onClick={() => handleToothClick(num)}
-                      sx={{ minHeight: 58, fontWeight: 600 }}
+                      sx={{ minHeight: 52, fontWeight: 600, fontSize: '0.75rem' }}
                     >
                       {num}
                       {tooth.status && tooth.status !== 'healthy' && (
-                        <Chip label={tooth.status} color="primary" size="small" sx={{ ml: 0.5 }} />
+                        <Chip label={tooth.status} color="primary" size="small" sx={{ ml: 0.5, fontSize: '0.6rem' }} />
+                      )}
+                    </Button>
+                  </Grid>
+                );
+              })}
+            </Grid>
+
+            {/* Нижняя челюсть */}
+            <Typography variant="subtitle2" sx={{ mb: 1, color: '#1565c0' }}>
+              Нижняя челюсть
+            </Typography>
+            <Grid container spacing={0.5}>
+              {[...lowerRight, ...lowerLeft].map((num) => {
+                const tooth = getToothData(num);
+                return (
+                  <Grid item xs={1.5} key={num}>
+                    <Button
+                      variant="outlined"
+                      fullWidth
+                      onClick={() => handleToothClick(num)}
+                      sx={{ minHeight: 52, fontWeight: 600, fontSize: '0.75rem' }}
+                    >
+                      {num}
+                      {tooth.status && tooth.status !== 'healthy' && (
+                        <Chip label={tooth.status} color="primary" size="small" sx={{ ml: 0.5, fontSize: '0.6rem' }} />
                       )}
                     </Button>
                   </Grid>
@@ -299,6 +333,7 @@ const PatientCard = () => {
         </Collapse>
       </Box>
 
+      {/* Модалка редактирования зуба */}
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Зуб №{selectedTooth?.tooth_number}</DialogTitle>
         <DialogContent>

@@ -1,97 +1,97 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import { AuthProvider, useAuth } from './context/AuthContext';
 
-// Auth pages
+// Auth
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 
-// Layout
-import Layout from './components/Layout';
-import ProtectedRoute from './components/ProtectedRoute';
-
-// Admin
-import AdminDashboard from './pages/admin/Dashboard';
-import AdminCalendar from './pages/admin/Calendar';
-import AdminPatients from './pages/admin/Patients';
-import AdminServices from './pages/admin/Services';
+// Patient
+import PatientDashboard from './pages/patient/Dashboard';
+import PatientDoctors from './pages/patient/Doctors';
+import BookAppointment from './pages/patient/BookAppointment';
+import MyAppointments from './pages/patient/MyAppointments';
 
 // Doctor
 import DoctorDashboard from './pages/doctor/Dashboard';
 import DoctorPatients from './pages/doctor/Patients';
 import PatientCard from './pages/doctor/PatientCard';
-import TeethFormula from './pages/doctor/TeethFormula';
 
-// Patient
-import PatientDashboard from './pages/patient/Dashboard';
-import BookAppointment from './pages/patient/BookAppointment';
-import MyAppointments from './pages/patient/MyAppointments';
+// Admin
+import AdminDashboard from './pages/admin/Dashboard';
+import AdminPatients from './pages/admin/Patients';
+import AdminCalendar from './pages/admin/Calendar';
+import AdminServices from './pages/admin/Services';
 
-const theme = createTheme({
-  palette: {
-    primary: { main: '#1976d2' },
-    secondary: { main: '#9c27b0' },
-  },
-});
-
-function AppRoutes() {
-  const { user, loading } = useAuth();
-
-  if (loading) return <div style={{ padding: 40, textAlign: 'center' }}>Загрузка...</div>;
-
-  return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-
-      <Route element={<ProtectedRoute />}>
-        <Route element={<Layout />}>
-          {/* Admin */}
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/calendar" element={<AdminCalendar />} />
-          <Route path="/admin/patients" element={<AdminPatients />} />
-          <Route path="/admin/services" element={<AdminServices />} />
-
-          {/* Doctor */}
-          <Route path="/doctor" element={<DoctorDashboard />} />
-          <Route path="/doctor/patients" element={<DoctorPatients />} />
-          <Route path="/doctor/patient/:id" element={<PatientCard />} />
-          <Route path="/doctor/teeth/:appointmentId" element={<TeethFormula />} />
-
-          {/* Patient */}
-          <Route path="/patient" element={<PatientDashboard />} />
-          <Route path="/patient/book" element={<BookAppointment />} />
-          <Route path="/patient/appointments" element={<MyAppointments />} />
-        </Route>
-      </Route>
-
-      <Route 
-        path="/" 
-        element={
-          user 
-            ? (user.role === 'admin' ? <Navigate to="/admin" /> : 
-               user.role === 'doctor' ? <Navigate to="/doctor" /> : 
-               <Navigate to="/patient" />)
-            : <Navigate to="/login" />
-        } 
-      />
-      <Route path="*" element={<Navigate to="/" />} />
-    </Routes>
-  );
-}
+// Components
+import ProtectedRoute from './components/ProtectedRoute';
+import Layout from './components/Layout';
 
 function App() {
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <AuthProvider>
-        <Router>
-          <AppRoutes />
-        </Router>
-      </AuthProvider>
-    </ThemeProvider>
+    <Router>
+      <Routes>
+        {/* Публичные маршруты */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+
+        {/* ==================== ПАЦИЕНТ ==================== */}
+        <Route
+          path="/patient/*"
+          element={
+            <ProtectedRoute allowedRoles={['patient']}>
+              <Layout>
+                <Routes>
+                  <Route path="/" element={<PatientDashboard />} />
+                  <Route path="doctors" element={<PatientDoctors />} />
+                  <Route path="book" element={<BookAppointment />} />
+                  <Route path="appointments" element={<MyAppointments />} />
+                  <Route path="*" element={<Navigate to="/patient" />} />
+                </Routes>
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* ==================== ВРАЧ ==================== */}
+        <Route
+          path="/doctor/*"
+          element={
+            <ProtectedRoute allowedRoles={['doctor']}>
+              <Layout>
+                <Routes>
+                  <Route path="/" element={<DoctorDashboard />} />
+                  <Route path="patients" element={<DoctorPatients />} />
+                  <Route path="patient/:id" element={<PatientCard />} />
+                  <Route path="*" element={<Navigate to="/doctor" />} />
+                </Routes>
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* ==================== АДМИНИСТРАТОР ==================== */}
+        <Route
+          path="/admin/*"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <Layout>
+                <Routes>
+                  <Route path="/" element={<AdminDashboard />} />
+                  <Route path="patients" element={<AdminPatients />} />
+                  <Route path="calendar" element={<AdminCalendar />} />
+                  <Route path="services" element={<AdminServices />} />
+                  <Route path="*" element={<Navigate to="/admin" />} />
+                </Routes>
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Редирект по умолчанию */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </Router>
   );
 }
 

@@ -1,12 +1,11 @@
 import React from 'react';
-import { Outlet, Link, useNavigate } from 'react-router-dom';
-import { 
-  AppBar, Toolbar, Typography, Button, Box, Drawer, List, ListItem, ListItemButton, 
-  ListItemIcon, ListItemText, Divider 
+import { Outlet, useNavigate } from 'react-router-dom';
+import {
+  Box, Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText,
+  AppBar, Toolbar, Typography, IconButton, Button
 } from '@mui/material';
-import { 
-  Dashboard, CalendarMonth, People, MedicalServices, 
-  Logout 
+import {
+  Dashboard, People, CalendarMonth, MedicalServices, Logout, Person
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import PageLayout from './PageLayout';
@@ -30,14 +29,18 @@ const Layout = () => {
         { text: 'Пациенты', icon: <People />, path: '/admin/patients' },
         { text: 'Услуги', icon: <MedicalServices />, path: '/admin/services' },
       ];
-    } else if (user?.role === 'doctor') {
+    } 
+    else if (user?.role === 'doctor') {
       return [
         { text: 'Дашборд', icon: <Dashboard />, path: '/doctor' },
         { text: 'Пациенты', icon: <People />, path: '/doctor/patients' },
       ];
-    } else {
+    } 
+    else {
+      // Пациент
       return [
         { text: 'Главная', icon: <Dashboard />, path: '/patient' },
+        { text: 'Врачи', icon: <Person />, path: '/patient/doctors' },     // ← добавлено
         { text: 'Записаться', icon: <CalendarMonth />, path: '/patient/book' },
         { text: 'Мои записи', icon: <People />, path: '/patient/appointments' },
       ];
@@ -48,18 +51,19 @@ const Layout = () => {
 
   return (
     <Box sx={{ display: 'flex' }}>
+      {/* Верхняя панель */}
       <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
         <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            ПРОФ СТОМ — {user?.role === 'admin' ? 'Администратор' : user?.role === 'doctor' ? 'Врач' : 'Пациент'}
+          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+            Проф Стом
           </Typography>
-          <Typography sx={{ mr: 2 }}>{user?.full_name}</Typography>
           <Button color="inherit" onClick={handleLogout} startIcon={<Logout />}>
             Выйти
           </Button>
         </Toolbar>
       </AppBar>
 
+      {/* Боковое меню */}
       <Drawer
         variant="permanent"
         sx={{
@@ -73,26 +77,19 @@ const Layout = () => {
           <List>
             {menuItems.map((item) => (
               <ListItem key={item.text} disablePadding>
-                <ListItemButton component={Link} to={item.path}>
+                <ListItemButton onClick={() => navigate(item.path)}>
                   <ListItemIcon>{item.icon}</ListItemIcon>
                   <ListItemText primary={item.text} />
                 </ListItemButton>
               </ListItem>
             ))}
           </List>
-          <Divider />
-          <List>
-            <ListItem disablePadding>
-              <ListItemButton onClick={handleLogout}>
-                <ListItemIcon><Logout /></ListItemIcon>
-                <ListItemText primary="Выйти" />
-              </ListItemButton>
-            </ListItem>
-          </List>
         </Box>
       </Drawer>
 
-      <Box component="main" sx={{ flexGrow: 1, mt: 8 }}>
+      {/* Основной контент */}
+      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+        <Toolbar />
         <PageLayout>
           <Outlet />
         </PageLayout>
