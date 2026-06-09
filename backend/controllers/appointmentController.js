@@ -142,6 +142,105 @@ class AppointmentController {
     }
   }
 
+  async rescheduleAppointment(req, res) {
+    try {
+      const { id } = req.params;
+      const { newDate, newTime } = req.body;
+
+      const appointment = await Appointment.findByPk(id);
+      if (!appointment) return res.status(404).json({ error: 'Запись не найдена' });
+
+      const conflicting = await Appointment.findOne({
+        where: {
+          doctor_id: appointment.doctor_id,
+          appointment_date: newDate,
+          appointment_time: newTime,
+          status: { [Op.notIn]: ['cancelled', 'completed'] },
+          id: { [Op.ne]: id }
+        }
+      });
+
+      if (conflicting) {
+        return res.status(409).json({ error: 'Выбранное время уже занято' });
+      }
+
+      appointment.appointment_date = newDate;
+      appointment.appointment_time = newTime;
+      await appointment.save();
+
+      const io = req.app.get('io');
+      if (io) {
+        io.to(`user_${appointment.patient_id}`).emit('appointment_rescheduled', appointment);
+        io.to(`doctor_${appointment.doctor_id}`).emit('appointment_rescheduled', appointment);
+      }
+
+      res.json({ message: 'Запись успешно перенесена', appointment });
+    } catch (error) {
+      console.error('reschedule error:', error);
+      res.status(500).json({ error: 'Ошибка при переносе записи' });
+    }
+  }
+
+  async requestReschedule(req, res) {
+    try {
+      const { id } = req.params;
+      const { new_date, new_time } = req.body;
+
+      const appointment = await Appointment.findByPk(id);
+      if (!appointment) return res.status(404).json({ error: 'Запись не найдена' });
+
+      const patient = await Patient.findOne({ where: { user_id: req.user.id } });
+      if (!patient || patient.id !== appointment.patient_id) {
+        return res.status(403).json({ error: 'Нет прав на перенос этой записи' });
+      }
+
+      if (appointment.status === 'cancelled') {
+        return res.status(400).json({ error: 'Нельзя перенести отменённую запись' });
+      }
+
+      appointment.reschedule_date = new_date;
+      appointment.reschedule_time = new_time;
+      appointment.status = 'reschedule_requested';
+
+      await appointment.save();
+
+      res.json({ message: 'Запрос на перенос отправлен администратору' });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  async handleRescheduleRequest(req, res) {
+    try {
+      const { id } = req.params;
+      const { action } = req.body;
+
+      const appointment = await Appointment.findByPk(id);
+      if (!appointment) return res.status(404).json({ error: 'Запись не найдена' });
+
+      if (appointment.status !== 'reschedule_requested') {
+        return res.status(400).json({ error: 'Это не запрос на перенос' });
+      }
+
+      if (action === 'approve') {
+        appointment.appointment_date = appointment.reschedule_date;
+        appointment.appointment_time = appointment.reschedule_time;
+        appointment.status = 'pending';
+        appointment.reschedule_date = null;
+        appointment.reschedule_time = null;
+      } else if (action === 'reject') {
+        appointment.status = 'pending';
+        appointment.reschedule_date = null;
+        appointment.reschedule_time = null;
+      }
+
+      await appointment.save();
+      res.json({ message: `Запрос на перенос ${action === 'approve' ? 'одобрен' : 'отклонён'}` });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
   async deleteAppointment(req, res) {
     try {
       const { id } = req.params;
