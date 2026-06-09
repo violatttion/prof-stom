@@ -122,27 +122,24 @@ class AppointmentController {
     }
   }
 
-  // === АДМИН ОДОБРЯЕТ / ОТКЛОНЯЕТ ПЕРЕНОС (улучшенная версия) ===
+  // === АДМИН ОДОБРЯЕТ / ОТКЛОНЯЕТ ПЕРЕНОС (финальная версия) ===
   async handleRescheduleRequest(req, res) {
     try {
       const { id } = req.params;
       const { action } = req.body;
 
-      console.log('handleRescheduleRequest called:', { id, action, body: req.body });
-
       if (!['approve', 'reject'].includes(action)) {
-        return res.status(400).json({ error: 'Неверное действие (нужно approve или reject)' });
+        return res.status(400).json({ error: 'Неверное действие' });
       }
 
       const appointment = await Appointment.findByPk(id);
       if (!appointment) return res.status(404).json({ error: 'Запись не найдена' });
 
       if (action === 'approve') {
-        if (!appointment.reschedule_date || !appointment.reschedule_time) {
-          return res.status(400).json({ error: 'Нет данных для переноса (reschedule_date/reschedule_time пустые)' });
+        if (appointment.reschedule_date && appointment.reschedule_time) {
+          appointment.appointment_date = appointment.reschedule_date;
+          appointment.appointment_time = appointment.reschedule_time;
         }
-        appointment.appointment_date = appointment.reschedule_date;
-        appointment.appointment_time = appointment.reschedule_time;
         appointment.status = 'pending';
       } else {
         appointment.status = 'pending';
@@ -167,7 +164,6 @@ class AppointmentController {
     try {
       const { id } = req.params;
       const { status } = req.body;
-
       const appointment = await Appointment.findByPk(id);
       if (!appointment) return res.status(404).json({ error: 'Запись не найдена' });
 
