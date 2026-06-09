@@ -22,14 +22,9 @@ class AppointmentController {
     try {
       let { patient_id, doctor_id, appointment_date, appointment_time, service_ids = [], notes } = req.body;
 
-      // Получаем patient_id, если его нет в теле запроса
       if (req.user.role === 'patient' && !patient_id) {
         const patient = await Patient.findOne({ where: { user_id: req.user.id } });
-        if (patient) {
-          patient_id = patient.id;
-        } else {
-          return res.status(400).json({ error: 'Профиль пациента не найден. Обратитесь к администратору.' });
-        }
+        if (patient) patient_id = patient.id;
       }
 
       if (!patient_id || !doctor_id || !appointment_date || !appointment_time) {
