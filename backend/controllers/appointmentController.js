@@ -1,4 +1,4 @@
-const { Appointment, Patient, Doctor, User } = require('../models');
+const { Appointment, Patient, Doctor, Service, User } = require('../models');
 const { Op } = require('sequelize');
 
 class AppointmentController {
@@ -7,7 +7,8 @@ class AppointmentController {
       const appointments = await Appointment.findAll({
         include: [
           { model: Patient, include: [{ model: User, attributes: ['full_name'] }] },
-          { model: Doctor, include: [{ model: User, attributes: ['full_name'] }] }
+          { model: Doctor, include: [{ model: User, attributes: ['full_name'] }] },
+          { model: Service }
         ],
         order: [['appointment_date', 'DESC'], ['appointment_time', 'DESC']]
       });
@@ -20,15 +21,26 @@ class AppointmentController {
 
   async create(req, res) {
     try {
-      const { patient_id, doctor_id, appointment_date, appointment_time, notes } = req.body;
+      let { patient_id, doctor_id, appointment_date, appointment_time, service_ids = [], notes } = req.body;
+
+      if (req.user.role === 'patient' && !patient_id) {
+        const patient = await Patient.findOne({ where: { user_id: req.user.id } });
+        if (patient) patient_id = patient.id;
+      }
+
+      if (!patient_id || !doctor_id || !appointment_date || !appointment_time) {
+        return res.status(400).json({ error: 'Не все обязательные поля заполнены' });
+      }
 
       const appointment = await Appointment.create({
         patient_id,
         doctor_id,
         appointment_date,
         appointment_time,
-        status: 'pending',
-        notes: notes || ''
+        status: req.user.role === 'patient' ? 'pending' : 'confirmed',
+        source: req.user.role,
+        notes: notes || '',
+        created_by: req.user.id
       });
 
       res.status(201).json(appointment);
@@ -40,13 +52,25 @@ class AppointmentController {
 
   async getMyAppointments(req, res) {
     try {
+      let where = {};
+      if (req.user.role === 'patient') {
+        const patient = await Patient.findOne({ where: { user_id: req.user.id } });
+        if (patient) where.patient_id = patient.id;
+      } else if (req.user.role === 'doctor') {
+        const doctor = await Doctor.findOne({ where: { user_id: req.user.id } });
+        if (doctor) where.doctor_id = doctor.id;
+      }
+
       const appointments = await Appointment.findAll({
+        where,
         include: [
           { model: Patient, include: [{ model: User, attributes: ['full_name'] }] },
-          { model: Doctor, include: [{ model: User, attributes: ['full_name'] }] }
+          { model: Doctor, include: [{ model: User, attributes: ['full_name'] }] },
+          { model: Service }
         ],
         order: [['appointment_date', 'DESC'], ['appointment_time', 'DESC']]
       });
+
       res.json(appointments);
     } catch (error) {
       console.error('getMyAppointments error:', error);
