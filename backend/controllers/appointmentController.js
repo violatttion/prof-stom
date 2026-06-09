@@ -40,7 +40,7 @@ class AppointmentController {
         notes: notes || ''
       });
 
-      if (service_ids && service_ids.length > 0) {
+      if (service_ids?.length > 0) {
         const services = await Service.findAll({ where: { id: service_ids } });
         await appointment.setServices(services);
       }
@@ -80,15 +80,11 @@ class AppointmentController {
     }
   }
 
-  // === ПЕРЕНОС ЗАПИСИ (админ / врач) ===
+  // === ПЕРЕНОС (админ/врач) ===
   async rescheduleAppointment(req, res) {
     try {
       const { id } = req.params;
       const { newDate, newTime } = req.body;
-
-      if (!newDate || !newTime) {
-        return res.status(400).json({ error: 'Новая дата и время обязательны' });
-      }
 
       const appointment = await Appointment.findByPk(id);
       if (!appointment) return res.status(404).json({ error: 'Запись не найдена' });
@@ -100,11 +96,9 @@ class AppointmentController {
       appointment.reschedule_time = null;
 
       await appointment.save();
-
-      res.json({ message: 'Запись успешно перенесена', appointment });
+      res.json({ message: 'Запись перенесена', appointment });
     } catch (error) {
-      console.error('rescheduleAppointment error:', error);
-      res.status(500).json({ error: 'Ошибка при переносе записи' });
+      res.status(500).json({ error: 'Ошибка при переносе' });
     }
   }
 
@@ -122,29 +116,22 @@ class AppointmentController {
       appointment.status = 'reschedule_requested';
       await appointment.save();
 
-      res.json({ message: 'Запрос на перенос отправлен' });
+      res.json({ message: 'Запрос отправлен' });
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
   }
 
-  // === АДМИН ОДОБРЯЕТ ИЛИ ОТКЛОНЯЕТ ПЕРЕНОС ===
+  // === АДМИН ОДОБРЯЕТ / ОТКЛОНЯЕТ ===
   async handleRescheduleRequest(req, res) {
     try {
       const { id } = req.params;
-      const { action } = req.body; // 'approve' или 'reject'
-
-      if (!['approve', 'reject'].includes(action)) {
-        return res.status(400).json({ error: 'Неверное действие' });
-      }
+      const { action } = req.body;
 
       const appointment = await Appointment.findByPk(id);
       if (!appointment) return res.status(404).json({ error: 'Запись не найдена' });
 
       if (action === 'approve') {
-        if (!appointment.reschedule_date || !appointment.reschedule_time) {
-          return res.status(400).json({ error: 'Нет данных для переноса' });
-        }
         appointment.appointment_date = appointment.reschedule_date;
         appointment.appointment_time = appointment.reschedule_time;
         appointment.status = 'pending';
@@ -156,14 +143,9 @@ class AppointmentController {
       appointment.reschedule_time = null;
 
       await appointment.save();
-
-      res.json({ 
-        message: action === 'approve' ? 'Перенос одобрен' : 'Перенос отклонён',
-        appointment 
-      });
+      res.json({ message: action === 'approve' ? 'Одобрено' : 'Отклонено' });
     } catch (error) {
-      console.error('handleRescheduleRequest error:', error);
-      res.status(500).json({ error: 'Ошибка при обработке запроса на перенос' });
+      res.status(500).json({ error: 'Ошибка при обработке' });
     }
   }
 
@@ -186,7 +168,7 @@ class AppointmentController {
     try {
       const { id } = req.params;
       await Appointment.destroy({ where: { id } });
-      res.json({ message: 'Приём удалён' });
+      res.json({ message: 'Удалено' });
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
