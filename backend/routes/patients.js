@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { Patient, User } = require('../models');
-const { authenticateToken, authorizeRoles } = require('../middleware/auth');
+const { Patient, User, Appointment, Doctor, Service } = require('../models');
+const { authenticateToken } = require('../middleware/auth');
 
 router.use(authenticateToken);
 
@@ -19,23 +19,22 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const patient = await Patient.findByPk(req.params.id, {
-      include: [{ model: User, attributes: ['full_name', 'email', 'phone'] }]
+      include: [
+        { model: User, attributes: ['full_name', 'email', 'phone'] },
+        {
+          model: Appointment,
+          include: [
+            { model: Doctor, include: [{ model: User, attributes: ['full_name'] }] },
+            { model: Service }
+          ]
+        }
+      ]
     });
     if (!patient) return res.status(404).json({ error: 'Пациент не найден' });
     res.json(patient);
   } catch (error) {
-    res.status(500).json({ error: 'Не удалось загрузить пациента' });
-  }
-});
-
-router.delete('/:id', authorizeRoles('admin'), async (req, res) => {
-  try {
-    const patient = await Patient.findByPk(req.params.id);
-    if (!patient) return res.status(404).json({ error: 'Пациент не найден' });
-    await patient.destroy();
-    res.json({ message: 'Пациент удалён' });
-  } catch (error) {
-    res.status(500).json({ error: 'Ошибка удаления' });
+    console.error('Patient card error:', error);
+    res.status(500).json({ error: 'Не удалось загрузить данные пациента' });
   }
 });
 

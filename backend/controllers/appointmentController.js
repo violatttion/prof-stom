@@ -1,9 +1,14 @@
-const { Appointment } = require('../models');
+const { Appointment, Patient, Doctor, Service, User } = require('../models');
 
 class AppointmentController {
   async getAll(req, res) {
     try {
       const appointments = await Appointment.findAll({
+        include: [
+          { model: Patient, include: [{ model: User, attributes: ['full_name'] }] },
+          { model: Doctor, include: [{ model: User, attributes: ['full_name'] }] },
+          { model: Service }
+        ],
         order: [['appointment_date', 'DESC'], ['appointment_time', 'DESC']]
       });
       res.json(appointments);
@@ -15,16 +20,26 @@ class AppointmentController {
 
   async create(req, res) {
     try {
-      const { patient_id, doctor_id, appointment_date, appointment_time, notes } = req.body;
+      let { patient_id, doctor_id, appointment_date, appointment_time, service_ids = [], notes } = req.body;
+
+      if (req.user.role === 'patient' && !patient_id) {
+        const patient = await Patient.findOne({ where: { user_id: req.user.id } });
+        if (patient) patient_id = patient.id;
+      }
 
       const appointment = await Appointment.create({
         patient_id,
         doctor_id,
         appointment_date,
         appointment_time,
-        status: 'pending',
+        status: req.user.role === 'patient' ? 'pending' : 'confirmed',
         notes: notes || ''
       });
+
+      if (service_ids && service_ids.length > 0) {
+        const services = await Service.findAll({ where: { id: service_ids } });
+        await appointment.setServices(services);
+      }
 
       res.status(201).json(appointment);
     } catch (error) {
@@ -35,9 +50,25 @@ class AppointmentController {
 
   async getMyAppointments(req, res) {
     try {
+      let where = {};
+      if (req.user.role === 'patient') {
+        const patient = await Patient.findOne({ where: { user_id: req.user.id } });
+        if (patient) where.patient_id = patient.id;
+      } else if (req.user.role === 'doctor') {
+        const doctor = await Doctor.findOne({ where: { user_id: req.user.id } });
+        if (doctor) where.doctor_id = doctor.id;
+      }
+
       const appointments = await Appointment.findAll({
+        where,
+        include: [
+          { model: Patient, include: [{ model: User, attributes: ['full_name'] }] },
+          { model: Doctor, include: [{ model: User, attributes: ['full_name'] }] },
+          { model: Service }
+        ],
         order: [['appointment_date', 'DESC'], ['appointment_time', 'DESC']]
       });
+
       res.json(appointments);
     } catch (error) {
       console.error('getMyAppointments error:', error);
@@ -49,13 +80,11 @@ class AppointmentController {
     try {
       const { id } = req.params;
       const { status } = req.body;
-
       const appointment = await Appointment.findByPk(id);
       if (!appointment) return res.status(404).json({ error: 'Запись не найдена' });
 
       appointment.status = status;
       await appointment.save();
-
       res.json(appointment);
     } catch (error) {
       res.status(500).json({ error: error.message });
