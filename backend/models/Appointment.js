@@ -25,7 +25,6 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.ENUM('pending', 'confirmed', 'cancelled', 'reschedule_requested'),
       defaultValue: 'pending'
     },
-    // Поля для запроса на перенос
     reschedule_date: {
       type: DataTypes.DATEONLY,
       allowNull: true
@@ -40,6 +39,9 @@ module.exports = (sequelize, DataTypes) => {
     }
   }, {
     tableName: 'appointments',
-    timestamps: true
+    timestamps: true,
+    underscored: true,           // ← ЭТО ГЛАВНОЕ
+    createdAt: 'created_at',
+    updatedAt: 'updated_at'
   });
 };
