@@ -80,6 +80,74 @@ class AppointmentController {
     }
   }
 
+  // === ПЕРЕНОС ЗАПИСЕЙ (для админа и врача) ===
+  async rescheduleAppointment(req, res) {
+    try {
+      const { id } = req.params;
+      const { newDate, newTime } = req.body;
+
+      const appointment = await Appointment.findByPk(id);
+      if (!appointment) return res.status(404).json({ error: 'Запись не найдена' });
+
+      appointment.appointment_date = newDate;
+      appointment.appointment_time = newTime;
+      appointment.status = 'pending';
+      await appointment.save();
+
+      res.json({ message: 'Запись успешно перенесена', appointment });
+    } catch (error) {
+      console.error('reschedule error:', error);
+      res.status(500).json({ error: 'Ошибка при переносе записи' });
+    }
+  }
+
+  // === ЗАПРОС НА ПЕРЕНОС ОТ ПАЦИЕНТА ===
+  async requestReschedule(req, res) {
+    try {
+      const { id } = req.params;
+      const { new_date, new_time } = req.body;
+
+      const appointment = await Appointment.findByPk(id);
+      if (!appointment) return res.status(404).json({ error: 'Запись не найдена' });
+
+      appointment.reschedule_date = new_date;
+      appointment.reschedule_time = new_time;
+      appointment.status = 'reschedule_requested';
+      await appointment.save();
+
+      res.json({ message: 'Запрос на перенос отправлен администратору' });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  // === ОДОБРЕНИЕ / ОТКЛОНЕНИЕ ПЕРЕНОСА АДМИНОМ ===
+  async handleRescheduleRequest(req, res) {
+    try {
+      const { id } = req.params;
+      const { action } = req.body; // 'approve' или 'reject'
+
+      const appointment = await Appointment.findByPk(id);
+      if (!appointment) return res.status(404).json({ error: 'Запись не найдена' });
+
+      if (action === 'approve') {
+        appointment.appointment_date = appointment.reschedule_date;
+        appointment.appointment_time = appointment.reschedule_time;
+        appointment.status = 'pending';
+      } else {
+        appointment.status = 'pending';
+      }
+
+      appointment.reschedule_date = null;
+      appointment.reschedule_time = null;
+
+      await appointment.save();
+      res.json({ message: `Запрос на перенос ${action === 'approve' ? 'одобрен' : 'отклонён'}` });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
   async updateStatus(req, res) {
     try {
       const { id } = req.params;
